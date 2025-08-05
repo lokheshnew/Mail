@@ -1,8 +1,15 @@
 import React from "react";
 import { FaSearch } from "react-icons/fa";
 import ThemeToggle from "./ThemeToggle";
+// import "./header.css";
 
-const Header = ({ searchQuery, onSearchChange, username, onLogout, onClearSearch }) => {
+const Header = ({
+  searchQuery,
+  onSearchChange,
+  username,
+  onLogout,
+  onClearSearch,
+}) => {
   const getInitials = (name) => {
     return name ? name.charAt(0).toUpperCase() : "U";
   };
@@ -17,10 +24,9 @@ const Header = ({ searchQuery, onSearchChange, username, onLogout, onClearSearch
     <header className="gmail-header">
       <div className="header-left">
         <div className="gmail-logo">
-          <div className="auth-logo">
-            📧
-          </div>
-          <span className="logo-text">MailApp</span>
+          {/* <div className="gmail-logo"> */}
+          <img src="logo.png" alt="Logo" className="logo-img" />
+          {/* </div> */}
         </div>
         <div className="search-container">
           <FaSearch className="search-icon" />
@@ -32,7 +38,7 @@ const Header = ({ searchQuery, onSearchChange, username, onLogout, onClearSearch
             onChange={(e) => onSearchChange(e.target.value)}
           />
           {searchQuery && (
-            <button 
+            <button
               className="search-clear"
               onClick={handleSearchClear}
               title="Clear search"
