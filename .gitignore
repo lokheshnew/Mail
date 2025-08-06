@@ -14,6 +14,7 @@
 /frontend/build
 /backend/mail_data/
 /backend/mail_users/
+/backend/uploads
 __pycache__/
 # misc
 .DS_Store
