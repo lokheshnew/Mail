@@ -1,8 +1,13 @@
-from datetime import datetime
+from datetime import datetime,timedelta
 from utils.encryption import Encryption
-from utils.file_helpers import read_mail_file, save_mail_file
+from utils.file_helpers import read_mail_file, save_mail_file,setup_user_folders
 from utils.storage import is_storage_full
 from models.user import load_users
+import os
+import json
+from config import TRASH_EXPIRY_HOURS
+import base64
+
 
 class MailService:
     @staticmethod
@@ -110,75 +115,133 @@ class MailService:
     
     @staticmethod
     def send_mail(sender, recipient, subject, body, attachment=None):
-        """Send an email with improved error handling"""
-        # Input validation
-        if not sender or not recipient:
-            return False, "Sender and recipient are required"
-        
-        if not isinstance(sender, str) or not isinstance(recipient, str):
-            return False, "Invalid email format"
-        
-        # Validate email format
-        import re
-        email_pattern = r'^[^\s@]+@[^\s@]+\.[^\s@]+$'
-        if not re.match(email_pattern, sender) or not re.match(email_pattern, recipient):
-            return False, "Invalid email format"
-        
-        users = load_users()
-        
-        # Check if sender and recipient exist
-        if sender not in users:
-            return False, f"Sender '{sender}' not found"
-        
-        if recipient not in users:
-            return False, f"Recipient '{recipient}' not found"
-        
-        # Check storage limits
-        if is_storage_full(sender):
-            return False, "Sender storage limit exceeded"
-            
-        if is_storage_full(recipient):
-            return False, "Recipient storage limit exceeded"
-        
+        """Send mail with improved attachment handling for both frontend and API"""
         try:
-            # Encrypt body using legacy method for compatibility
+            # Setup folders for both sender and recipient
+            setup_user_folders(sender)
+            setup_user_folders(recipient)
+            
+            # Encrypt body - FIXED: This was missing in the original new version
             encryption = Encryption()
             encrypted_body = encryption.encrypt(body or "")
             
-            now = datetime.now().isoformat()
-            
-            # Create mail object
-            mail = {
-                'from': sender,
-                'to': recipient,
-                'subject': subject or "",
-                'body': encrypted_body,
-                'date_of_compose': now,
-                'date_of_send': now,
-                'message_status': 'unread',
-                'attachment': attachment
+            # Prepare email data
+            email_data = {
+                "from": sender,
+                "to": recipient, 
+                "subject": subject,
+                "body": encrypted_body,  # Store encrypted body
+                "date_of_send": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                "message_status": "unread",
+                "message_id": f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_{sender.split('@')[0]}_to_{recipient.split('@')[0]}"
             }
             
-            # Add to recipient's inbox
-            recipient_inbox = read_mail_file(recipient, 'inbox')
-            recipient_inbox.append(mail)
-            if not save_mail_file(recipient, 'inbox', recipient_inbox):
-                return False, "Failed to save to recipient's inbox"
+            # Handle different attachment formats
+            if attachment:
+                processed_attachment = MailService._process_attachment(attachment)
+                if processed_attachment:
+                    email_data["attachment"] = processed_attachment
             
             # Add to sender's sent folder
-            sender_sent = read_mail_file(sender, 'sent')
-            sender_sent.append(mail)
-            if not save_mail_file(sender, 'sent', sender_sent):
-                # Rollback recipient inbox if sender sent fails
-                recipient_inbox.pop()
-                save_mail_file(recipient, 'inbox', recipient_inbox)
-                return False, "Failed to save to sender's sent folder"
+            sent_emails = read_mail_file(sender, 'sent')
+            sent_emails.append(email_data.copy())
+            save_mail_file(sender, 'sent', sent_emails)
+            
+            # Add to recipient's inbox
+            inbox_emails = read_mail_file(recipient, 'inbox')
+            inbox_emails.append(email_data.copy())
+            save_mail_file(recipient, 'inbox', inbox_emails)
             
             return True, None
             
         except Exception as e:
-            print(f"Error sending email: {e}")
-            return False, f"Error sending email: {str(e)}"
+            return False, f"Failed to send email: {str(e)}"
+    
+    @staticmethod
+    def _process_attachment(attachment):
+        """Process attachment for different input formats"""
+        try:
+            if not attachment:
+                return None
+            
+            # Case 1: Base64 object from API (like your Postman request)
+            if isinstance(attachment, dict) and 'content' in attachment and 'filename' in attachment:
+                return {
+                    "filename": attachment['filename'],
+                    "content": attachment['content'],  # Already base64 encoded
+                    "type": "base64"
+                }
+            
+            # Case 2: File URL/path from frontend upload
+            elif isinstance(attachment, str):
+                # Check if it's a file path/URL
+                if attachment.startswith('/') or 'uploads' in attachment:
+                    # Try to read the file and convert to base64
+                    file_content = MailService._file_to_base64(attachment)
+                    if file_content:
+                        # Extract filename from path
+                        filename = attachment.split('/')[-1]
+                        # Remove timestamp prefix if present (format: YYYYMMDD_HHMMSS_filename)
+                        if '_' in filename:
+                            parts = filename.split('_')
+                            if len(parts) >= 3 and parts[0].isdigit() and parts[1].isdigit():
+                                filename = '_'.join(parts[2:])
+                        
+                        return {
+                            "filename": filename,
+                            "content": file_content,
+                            "type": "base64",
+                            "original_path": attachment  # Keep original path for reference
+                        }
+                    else:
+                        # If file reading fails, store as path reference
+                        return {
+                            "filename": attachment.split('/')[-1],
+                            "path": attachment,
+                            "type": "path"
+                        }
+                else:
+                    # Direct base64 string
+                    return {
+                        "filename": "attachment",
+                        "content": attachment,
+                        "type": "base64"
+                    }
+            
+            return None
+            
+        except Exception as e:
+            print(f"Error processing attachment: {e}")
+            return None
+    
+    @staticmethod
+    def _file_to_base64(file_path):
+        """Convert file to base64 string"""
+        try:
+            # Handle different path formats
+            if file_path.startswith('/uploads/'):
+                # Remove leading slash and construct full path
+                from config import UPLOAD_FOLDER
+                actual_path = os.path.join(UPLOAD_FOLDER, file_path[9:])  # Remove '/uploads/'
+            elif file_path.startswith('uploads/'):
+                from config import UPLOAD_FOLDER
+                actual_path = os.path.join(UPLOAD_FOLDER, file_path[8:])  # Remove 'uploads/'
+            else:
+                actual_path = file_path
+            
+            # Read file and encode to base64
+            if os.path.exists(actual_path):
+                with open(actual_path, 'rb') as f:
+                    file_content = f.read()
+                return base64.b64encode(file_content).decode('utf-8')
+            else:
+                print(f"File not found: {actual_path}")
+                return None
+                
+        except Exception as e:
+            print(f"Error converting file to base64: {e}")
+            return None
+
     
     @staticmethod
     def schedule_mail(sender, recipient, subject, body, scheduled_time, attachment=None):

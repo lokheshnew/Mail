@@ -235,6 +235,154 @@ const EmailItem = ({
     return mail.scheduled_date || mail.date_of_send || mail.date_of_compose;
   };
 
+  // Enhanced attachment rendering functions
+  const renderAttachment = () => {
+    if (!mail.attachment) return null;
+
+    return (
+      <div className="email-attachment">
+        <div className="attachment-item">
+          <span className="attachment-icon">📎</span>
+          {renderAttachmentLink()}
+        </div>
+      </div>
+    );
+  };
+
+  const renderAttachmentLink = () => {
+    const attachment = mail.attachment;
+    
+    // Case 1: Base64 content with filename (from API or processed frontend uploads)
+    if (typeof attachment === "object" && attachment.content && attachment.filename) {
+      // Create blob URL for base64 content
+      const handleBase64Download = () => {
+        try {
+          const byteCharacters = atob(attachment.content);
+          const byteNumbers = new Array(byteCharacters.length);
+          for (let i = 0; i < byteCharacters.length; i++) {
+            byteNumbers[i] = byteCharacters.charCodeAt(i);
+          }
+          const byteArray = new Uint8Array(byteNumbers);
+          const blob = new Blob([byteArray]);
+          
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = attachment.filename;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          window.URL.revokeObjectURL(url);
+        } catch (error) {
+          console.error('Error downloading base64 attachment:', error);
+          alert('Error downloading attachment');
+        }
+      };
+
+      return (
+        <button
+          onClick={handleBase64Download}
+          className="attachment-link"
+          style={{ 
+            background: 'none', 
+            border: 'none', 
+            color: 'inherit', 
+            textDecoration: 'underline',
+            cursor: 'pointer',
+            padding: 0,
+            font: 'inherit'
+          }}
+        >
+          {attachment.filename}
+        </button>
+      );
+    }
+    
+    // Case 2: File path/URL (legacy or fallback for path-based attachments)
+    else if (typeof attachment === "string") {
+      const getAttachmentUrl = () => {
+        if (attachment.startsWith('http')) {
+          return attachment;
+        } else if (attachment.startsWith('/')) {
+          return `${API_BASE_URL}${attachment}`;
+        } else {
+          return `${API_BASE_URL}/${attachment}`;
+        }
+      };
+
+      const getFilename = () => {
+        const parts = attachment.split("/");
+        const filename = parts[parts.length - 1];
+        
+        // Remove timestamp prefix if present (YYYYMMDD_HHMMSS_filename)
+        if (filename.includes('_')) {
+          const fileParts = filename.split('_');
+          if (fileParts.length >= 3 && fileParts[0].match(/^\d{8}$/) && fileParts[1].match(/^\d{6}$/)) {
+            return fileParts.slice(2).join('_');
+          }
+        }
+        
+        return filename || "Attachment";
+      };
+
+      return (
+        <a
+          href={getAttachmentUrl()}
+          target="_blank"
+          rel="noopener noreferrer"
+          download
+          className="attachment-link"
+        >
+          {getFilename()}
+        </a>
+      );
+    }
+    
+    // Case 3: Object with path reference (for attachments stored as file paths)
+    else if (typeof attachment === "object" && attachment.path) {
+      const getAttachmentUrl = () => {
+        const path = attachment.path;
+        if (path.startsWith('http')) {
+          return path;
+        } else if (path.startsWith('/')) {
+          return `${API_BASE_URL}${path}`;
+        } else {
+          return `${API_BASE_URL}/${path}`;
+        }
+      };
+
+      return (
+        <a
+          href={getAttachmentUrl()}
+          target="_blank"
+          rel="noopener noreferrer"
+          download
+          className="attachment-link"
+        >
+          {attachment.filename || "Attachment"}
+        </a>
+      );
+    }
+    
+    // Case 4: Legacy object format (old base64 without type specification)
+    else if (typeof attachment === "object" && attachment.filename) {
+      return (
+        <a
+          href={`data:application/octet-stream;base64,${attachment.content || ''}`}
+          download={attachment.filename}
+          className="attachment-link"
+        >
+          {attachment.filename}
+        </a>
+      );
+    }
+    
+    // Fallback for unknown formats
+    else {
+      return <span className="attachment-link">Unknown attachment format</span>;
+    }
+  };
+
   return (
     <div
       className={`email-item ${
@@ -293,38 +441,7 @@ const EmailItem = ({
             </div>
           </div>
           <div className="email-body">{mail.body || "No content"}</div>
-          {mail.attachment && (
-  <div className="email-attachment">
-    <div className="attachment-item">
-      <span className="attachment-icon">📎</span>
-      {typeof mail.attachment === "string" ? (
-        <a
-  href={
-    mail.attachment.startsWith('http') 
-      ? mail.attachment  // no re-encoding
-      : `${API_BASE_URL}${mail.attachment}` // no encodeURI
-  }
-  target="_blank"
-  rel="noopener noreferrer"
-  download
-  className="attachment-link"
->
-  {mail.attachment.split("/").pop().split("_").slice(1).join("_") || "Attachment"}
-</a>
-
-      ) : (
-        <a
-          href={`data:application/octet-stream;base64,${mail.attachment.content}`}
-          download={mail.attachment.filename || "attachment"}
-          className="attachment-link"
-        >
-          {mail.attachment.filename || "Attachment"}
-        </a>
-      )}
-    </div>
-  </div>
-)}
-
+          {mail.attachment && renderAttachment()}
         </div>
       )}
     </div>

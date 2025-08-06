@@ -3,7 +3,7 @@ import axios from "axios";
 import { useNavigate, Link } from "react-router-dom";
 import "./AdminDashboard.css";
 import { API_BASE_URL } from "../config";
-import { FaUsers, FaEnvelope, FaChartBar, FaSignOutAlt, FaCog, FaSpinner } from "react-icons/fa";
+import { FaUsers, FaEnvelope, FaChartBar, FaSignOutAlt, FaCog, FaSpinner, FaBroadcastTower, FaTimes, FaPlus, FaMinus } from "react-icons/fa";
 
 function AdminDashboard() {
   const [domainUsers, setDomainUsers] = useState([]);
@@ -17,6 +17,17 @@ function AdminDashboard() {
   const [error, setError] = useState("");
   const [activeSection, setActiveSection] = useState("users");
   const [dataLoading, setDataLoading] = useState(false);
+
+  // Broadcast mail modal states
+  const [showBroadcastModal, setShowBroadcastModal] = useState(false);
+  const [broadcastForm, setBroadcastForm] = useState({
+    recipients: [''],
+    subject: '',
+    body: '',
+    attachment: null
+  });
+  const [broadcastLoading, setBroadcastLoading] = useState(false);
+  const [broadcastResult, setBroadcastResult] = useState(null);
 
   const navigate = useNavigate();
   
@@ -189,6 +200,122 @@ function AdminDashboard() {
     }
   };
 
+  // Broadcast mail functions
+  const handleBroadcastClick = () => {
+    setShowBroadcastModal(true);
+    setBroadcastResult(null);
+    // Reset form
+    setBroadcastForm({
+      recipients: [''],
+      subject: '',
+      body: '',
+      attachment: null
+    });
+  };
+
+  const closeBroadcastModal = () => {
+    setShowBroadcastModal(false);
+    setBroadcastForm({
+      recipients: [''],
+      subject: '',
+      body: '',
+      attachment: null
+    });
+    setBroadcastResult(null);
+  };
+
+  const handleRecipientChange = (index, value) => {
+    const newRecipients = [...broadcastForm.recipients];
+    newRecipients[index] = value;
+    setBroadcastForm(prev => ({
+      ...prev,
+      recipients: newRecipients
+    }));
+  };
+
+  const addRecipient = () => {
+    setBroadcastForm(prev => ({
+      ...prev,
+      recipients: [...prev.recipients, '']
+    }));
+  };
+
+  const removeRecipient = (index) => {
+    if (broadcastForm.recipients.length > 1) {
+      const newRecipients = broadcastForm.recipients.filter((_, i) => i !== index);
+      setBroadcastForm(prev => ({
+        ...prev,
+        recipients: newRecipients
+      }));
+    }
+  };
+
+  const selectAllUsers = () => {
+    const activeUserEmails = domainUsers
+      .filter(user => user.status === 'active' && user.email !== adminEmail)
+      .map(user => user.email);
+    
+    setBroadcastForm(prev => ({
+      ...prev,
+      recipients: activeUserEmails.length > 0 ? activeUserEmails : ['']
+    }));
+  };
+
+  const handleBroadcastSubmit = async (e) => {
+    e.preventDefault();
+    
+    // Validation
+    const validRecipients = broadcastForm.recipients.filter(email => email.trim() !== '');
+    
+    if (validRecipients.length === 0) {
+      alert('Please add at least one recipient');
+      return;
+    }
+
+    if (!broadcastForm.subject.trim()) {
+      alert('Please enter a subject');
+      return;
+    }
+
+    if (!broadcastForm.body.trim()) {
+      alert('Please enter email content');
+      return;
+    }
+
+    setBroadcastLoading(true);
+    
+    try {
+      const payload = {
+        from: adminEmail,
+        to: validRecipients,
+        subject: broadcastForm.subject,
+        body: broadcastForm.body,
+        attachment: broadcastForm.attachment
+      };
+
+      const response = await axios.post('http://10.96.232.159:5000/service/bulk_send', payload, {
+        headers: {
+          'X-API-KEY': '0898c79d9edee1eaf79e1f97718ea84da47472f70884944ba1641b58ed24796c',
+          'Content-Type': 'application/json'
+        }
+      });
+
+      setBroadcastResult({
+        success: true,
+        data: response.data
+      });
+
+    } catch (error) {
+      console.error('Broadcast error:', error);
+      setBroadcastResult({
+        success: false,
+        error: error.response?.data?.error || 'Failed to send broadcast email'
+      });
+    } finally {
+      setBroadcastLoading(false);
+    }
+  };
+
   return (
     <div className="admin-dashboard">
       <div className="admin-sidebar">
@@ -250,9 +377,14 @@ function AdminDashboard() {
           </h2>
           <div className="header-actions">
             {activeSection === "users" && (
-              <button className="add-user-btn" onClick={handleAddUser}>
-                Add New User
-              </button>
+              <>
+                <button className="add-user-btn" onClick={handleAddUser}>
+                  Add New User
+                </button>
+                <button className="broadcast-btn" onClick={handleBroadcastClick}>
+                  <FaBroadcastTower /> Broadcast Mail
+                </button>
+              </>
             )}
             <button className="refresh-btn" onClick={refreshData} disabled={loading}>
               {loading ? <FaSpinner className="spinning" /> : "Refresh"}
@@ -437,6 +569,171 @@ function AdminDashboard() {
           </div>
         )}
       </div>
+
+      {/* Broadcast Mail Modal */}
+      {showBroadcastModal && (
+        <div className="modal-overlay">
+          <div className="broadcast-modal">
+            <div className="modal-header">
+              <h3><FaBroadcastTower /> Broadcast Mail</h3>
+              <button className="close-btn" onClick={closeBroadcastModal}>
+                <FaTimes />
+              </button>
+            </div>
+            
+            <div className="modal-body">
+              {!broadcastResult ? (
+                <form onSubmit={handleBroadcastSubmit}>
+                  <div className="form-group">
+                    <label>From</label>
+                    <input 
+                      type="email" 
+                      value={adminEmail} 
+                      disabled 
+                      className="disabled-input"
+                    />
+                  </div>
+                  
+                  <div className="form-group">
+                    <label>Recipients</label>
+                    <div className="recipients-section">
+                      <button 
+                        type="button" 
+                        className="select-all-btn" 
+                        onClick={selectAllUsers}
+                        disabled={broadcastLoading}
+                      >
+                        Select All Active Users ({domainUsers.filter(u => u.status === 'active' && u.email !== adminEmail).length})
+                      </button>
+                      
+                      {broadcastForm.recipients.map((recipient, index) => (
+                        <div key={index} className="recipient-row">
+                          <input
+                            type="email"
+                            value={recipient}
+                            onChange={(e) => handleRecipientChange(index, e.target.value)}
+                            placeholder="Enter email address"
+                            required={index === 0}
+                            disabled={broadcastLoading}
+                          />
+                          <div className="recipient-actions">
+                            {index === broadcastForm.recipients.length - 1 && (
+                              <button 
+                                type="button" 
+                                onClick={addRecipient}
+                                className="add-recipient-btn"
+                                disabled={broadcastLoading}
+                              >
+                                <FaPlus />
+                              </button>
+                            )}
+                            {broadcastForm.recipients.length > 1 && (
+                              <button 
+                                type="button" 
+                                onClick={() => removeRecipient(index)}
+                                className="remove-recipient-btn"
+                                disabled={broadcastLoading}
+                              >
+                                <FaMinus />
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  
+                  <div className="form-group">
+                    <label>Subject</label>
+                    <input
+                      type="text"
+                      value={broadcastForm.subject}
+                      onChange={(e) => setBroadcastForm(prev => ({ ...prev, subject: e.target.value }))}
+                      placeholder="Enter email subject"
+                      required
+                      disabled={broadcastLoading}
+                    />
+                  </div>
+                  
+                  <div className="form-group">
+                    <label>Message</label>
+                    <textarea
+                      value={broadcastForm.body}
+                      onChange={(e) => setBroadcastForm(prev => ({ ...prev, body: e.target.value }))}
+                      placeholder="Enter your message here..."
+                      rows="8"
+                      required
+                      disabled={broadcastLoading}
+                    />
+                  </div>
+                  
+                  <div className="modal-actions">
+                    <button 
+                      type="button" 
+                      onClick={closeBroadcastModal}
+                      className="cancel-btn"
+                      disabled={broadcastLoading}
+                    >
+                      Cancel
+                    </button>
+                    <button 
+                      type="submit" 
+                      className="add-user-btn"
+                      disabled={broadcastLoading}
+                    >
+                      {broadcastLoading ? <FaSpinner className="spinning" /> : <FaBroadcastTower />}
+                      {broadcastLoading ? 'Sending...' : 'Send Broadcast'}
+                    </button>
+                  </div>
+                </form>
+              ) : (
+                <div className="broadcast-result">
+                  {broadcastResult.success ? (
+                    <div className="success-result">
+                      <h4>✅ Broadcast Sent Successfully!</h4>
+                      <div className="result-stats">
+                        <p><strong>Total Requested:</strong> {broadcastResult.data.total_requested}</p>
+                        <p><strong>Valid Recipients:</strong> {broadcastResult.data.total_valid}</p>
+                        <p><strong>Successfully Sent:</strong> {broadcastResult.data.total_sent}</p>
+                        <p><strong>Failed:</strong> {broadcastResult.data.total_failed}</p>
+                        <p><strong>Success Rate:</strong> {broadcastResult.data.summary?.success_rate}</p>
+                        <p><strong>Processing Time:</strong> {broadcastResult.data.summary?.processing_time}</p>
+                      </div>
+                      
+                      {broadcastResult.data.invalid_emails?.length > 0 && (
+                        <div className="invalid-emails">
+                          <h5>Invalid Recipients:</h5>
+                          <ul>
+                            {broadcastResult.data.invalid_emails.map((invalid, index) => (
+                              <li key={index}>
+                                {invalid.email}: {invalid.reason}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="error-result">
+                      <h4>❌ Broadcast Failed</h4>
+                      <p>{broadcastResult.error}</p>
+                    </div>
+                  )}
+                  
+                  <div className="modal-actions">
+                    <button 
+                      onClick={closeBroadcastModal}
+                      className="close-result-btn"
+                    >
+                      Close
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
