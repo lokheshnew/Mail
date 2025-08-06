@@ -7,7 +7,8 @@ API_KEY = '0898c79d9edee1eaf79e1f97718ea84da47472f70884944ba1641b58ed24796c'
 
 # File and directory paths
 MAIL_ROOT = 'mail_data'
-UPLOAD_FOLDER = os.path.join(MAIL_ROOT, "attachments")
+# UPLOAD_FOLDER = os.path.join(MAIL_ROOT, "uploads")
+UPLOAD_FOLDER="uploads"
 DATA_DIR = Path("mail_users")
 USERS_FILE = DATA_DIR / "users.json"
 SESSIONS_FILE = DATA_DIR / "sessions.json"

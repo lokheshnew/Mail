@@ -3,8 +3,12 @@ from services.mail_service import MailService
 from models.user import load_users
 from utils.storage import show_storage_status
 from utils.auth import verify_token
-
+from urllib.parse import urlparse
+import re
 mail_bp = Blueprint('mail', __name__)
+def sanitize_email_for_path(email):
+    return re.sub(r'[^a-zA-Z0-9._-]', '_', email)
+
 
 def get_user_from_request():
     """Get user email from JWT token in request headers"""
@@ -141,12 +145,22 @@ def send_mail():
     subject = data.get('subject')
     body = data.get('body')
     attachment = data.get('attachment')
-    
+
+    # Normalize attachment path if present
+    if attachment and attachment.startswith("/uploads/"):
+        parts = attachment.split("/")
+        if len(parts) >= 3:
+            email_part = parts[2]
+            safe_email = sanitize_email_for_path(email_part)
+            parts[2] = safe_email
+            attachment = "/".join(parts)
+
     success, error = MailService.send_mail(user_email, recipient, subject, body, attachment)
     if not success:
         return jsonify({"error": error}), 400
     
     return jsonify({"message": "Email sent successfully"})
+
 
 @mail_bp.route('/schedule', methods=['POST'])
 def schedule_email():

@@ -294,26 +294,37 @@ const EmailItem = ({
           </div>
           <div className="email-body">{mail.body || "No content"}</div>
           {mail.attachment && (
-            <div className="email-attachment">
-              <div className="attachment-item">
-                <span className="attachment-icon">📎</span>
-                <a
-                  href={mail.attachment.startsWith('http') ? mail.attachment : `${API_BASE_URL}${mail.attachment}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  download
-                  className="attachment-link"
-                >
-                  {mail.attachment
-                    .split("/")
-                    .pop()
-                    .split("_")
-                    .slice(1)
-                    .join("_") || "Attachment"}
-                </a>
-              </div>
-            </div>
-          )}
+  <div className="email-attachment">
+    <div className="attachment-item">
+      <span className="attachment-icon">📎</span>
+      {typeof mail.attachment === "string" ? (
+        <a
+  href={
+    mail.attachment.startsWith('http') 
+      ? mail.attachment  // no re-encoding
+      : `${API_BASE_URL}${mail.attachment}` // no encodeURI
+  }
+  target="_blank"
+  rel="noopener noreferrer"
+  download
+  className="attachment-link"
+>
+  {mail.attachment.split("/").pop().split("_").slice(1).join("_") || "Attachment"}
+</a>
+
+      ) : (
+        <a
+          href={`data:application/octet-stream;base64,${mail.attachment.content}`}
+          download={mail.attachment.filename || "attachment"}
+          className="attachment-link"
+        >
+          {mail.attachment.filename || "Attachment"}
+        </a>
+      )}
+    </div>
+  </div>
+)}
+
         </div>
       )}
     </div>
