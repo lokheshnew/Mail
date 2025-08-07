@@ -3,6 +3,7 @@ import { API_BASE_URL } from "../config";
 import { toast } from "react-toastify";
 import RecipientInput from "./RecipientInput";
 import ScheduleModal from "./ScheduleModal";
+import "./composeModal.css";
 
 const ComposeModal = ({
   onClose,
@@ -362,7 +363,7 @@ const ComposeModal = ({
                 </select>
               </div>
             )}
-            
+
             <button
               className="btn primary"
               onClick={handleSend}

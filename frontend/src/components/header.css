@@ -15,14 +15,6 @@
   gap: 24px;
 }
 
-.logo-container {
-  width: 100%;
-  height: 240px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
 .logo-img {
   height: 120px;
   width: auto;
@@ -31,41 +23,68 @@
 }
 
 .search-container {
-  display: flex;
-  align-items: center;
-  padding: 8px 16px;
-  min-width: 400px;
-}
-
-.search-container:focus-within,
-.search-input:focus {
-  outline: none;
+  position: relative;
+  flex: 1;
 }
 
 .search-input {
-  border: none;
-  background: transparent;
+  width: 100%;
+  padding: 0.6rem 1.2rem 0.6rem 2.5rem;
+  border: 1.5px solid #ccc;
+  border-radius: 50px;
+  font-size: 0.875rem;
+  transition: all 0.3s ease;
+  background: rgba(255, 255, 255, 0.6); /* Glass-like background */
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  color: #333;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.search-input:focus {
   outline: none;
-  flex: 1;
-  font-size: 16px;
-  color: #757677;
+  border-color: #7aaae3; /* soft blue */
+  box-shadow: 0 0 0 4px rgba(122, 170, 227, 0.3);
+  background: rgba(255, 255, 255, 0.8);
 }
 
 .search-input::placeholder {
   color: #3a3a3a;
 }
 
-/* .search-btn {
-  border: none;
-  background: transparent;
-  cursor: pointer;
-  padding: 4px;
-  color: #5f6368;
+.search-icon {
+  position: absolute;
+  left: var(--space-4);
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-tertiary);
+  font-size: 1rem;
 }
 
-.search-btn:hover {
-  background-color: #f1f1f1;
-} */
+.search-clear {
+  position: absolute;
+  right: var(--space-3);
+  top: 50%;
+  transform: translateY(-50%);
+  background: transparent;
+  border: none;
+  color: #000; /* Better visibility in both themes */
+  cursor: pointer;
+  padding: var(--space-1);
+  border-radius: var(--radius-md);
+  transition: background 0.2s ease, color 0.2s ease;
+  font-size: 0.875rem;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.search-clear:hover {
+  background: rgba(0, 0, 0, 0.1);
+  color: #000;
+}
 
 .header-right {
   display: flex;
@@ -135,4 +154,53 @@
 .logout-btn:hover {
   transform: translateY(-2px);
   box-shadow: 0 6px 20px rgba(106, 133, 241, 0.6);
+}
+
+/* Dark Mode Overrides */
+.gmail-header.dark-mode {
+  background: linear-gradient(to right, #1e1e2f, #2c2c3a) !important;
+  border-bottom: 1px solid #444;
+}
+
+.gmail-header.dark-mode .search-input {
+  background: #2b2b3c;
+  color: #f0f0f0;
+  border-color: #555;
+}
+
+.gmail-header.dark-mode .search-input::placeholder {
+  color: #999;
+}
+
+.gmail-header.dark-mode .search-icon {
+  color: #bbb;
+}
+
+.gmail-header.dark-mode .user-avatar {
+  background: linear-gradient(90deg, #2e8b57, #3b5998) !important;
+}
+
+.gmail-header.dark-mode .username {
+  background: linear-gradient(90deg, #e0e0e0, #cccccc);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  display: inline-block; /* Important */
+}
+
+.gmail-header.dark-mode .logout-btn {
+  background: linear-gradient(135deg, #444, #666) !important;
+  box-shadow: 0 4px 12px rgba(100, 100, 100, 0.4);
+}
+
+.gmail-header.dark-mode .logout-btn:hover {
+  box-shadow: 0 6px 20px rgba(100, 100, 100, 0.6);
+}
+
+.gmail-header.dark-mode .search-clear {
+  color: var(--text-primary);
+}
+
+.gmail-header.dark-mode .search-clear:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text-primary);
 }

@@ -767,6 +767,7 @@
 [data-theme="dark"] .nav-item.active {
   background: var(--primary-900);
   color: var(--primary-200);
+  background-color: grey;
 }
 
 .nav-item.active::before {
@@ -802,6 +803,7 @@
 .nav-item.active .nav-count {
   background: var(--primary-600);
   color: var(--text-inverse);
+  background-color: darkgray;
 }
 
 [data-theme="dark"] .nav-count {

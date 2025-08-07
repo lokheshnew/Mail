@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { API_BASE_URL } from "../config";
 import { toast } from "react-toastify";
+import "./templateModal.css";
 
 const TemplateModal = ({ onClose, onSaved, token }) => {
   const [templateName, setTemplateName] = useState("");
@@ -25,9 +26,9 @@ const TemplateModal = ({ onClose, onSaved, token }) => {
       // ✅ CORRECT ENDPOINT - Using /template/save_template
       const res = await fetch(`${API_BASE_URL}/template/save_template`, {
         method: "POST",
-        headers: { 
+        headers: {
           "Content-Type": "application/json",
-          'Authorization': `Bearer ${token}`
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           name: templateName.trim(),
@@ -35,9 +36,9 @@ const TemplateModal = ({ onClose, onSaved, token }) => {
           body: templateBody.trim(),
         }),
       });
-      
+
       const data = await res.json();
-      
+
       if (res.ok) {
         toast.success("Template saved successfully!");
         onSaved();
@@ -117,14 +118,14 @@ const TemplateModal = ({ onClose, onSaved, token }) => {
               rows="8"
               maxLength={5000}
               disabled={isSaving}
-              style={{ minHeight: '150px' }}
+              style={{ minHeight: "150px" }}
             />
           </div>
         </div>
 
         <div className="modal-footer">
-          <button 
-            className="btn btn-ghost" 
+          <button
+            className="btn btn-ghost"
             onClick={handleCancel}
             disabled={isSaving}
           >

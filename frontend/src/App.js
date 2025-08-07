@@ -12,7 +12,7 @@ import Dashboard from "./components/dashboard";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import "./styles/theme.css";
-import "./styles/components.css";
+// import "./styles/components.css";
 import "@fortawesome/fontawesome-free/css/all.min.css";
 
 // Import admin components

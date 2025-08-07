@@ -1,7 +1,7 @@
-import React from "react";
+import React, { useState } from "react";
 import { FaSearch } from "react-icons/fa";
 import ThemeToggle from "./ThemeToggle";
-// import "./header.css";
+import "./header.css";
 
 const Header = ({
   searchQuery,
@@ -9,6 +9,8 @@ const Header = ({
   username,
   onLogout,
   onClearSearch,
+  isDarkMode,
+  toggleDarkMode,
 }) => {
   const getInitials = (name) => {
     return name ? name.charAt(0).toUpperCase() : "U";
@@ -21,12 +23,10 @@ const Header = ({
   };
 
   return (
-    <header className="gmail-header">
+    <header className={`gmail-header ${isDarkMode ? "dark-mode" : ""}`}>
       <div className="header-left">
         <div className="gmail-logo">
-          {/* <div className="gmail-logo"> */}
           <img src="logo.png" alt="Logo" className="logo-img" />
-          {/* </div> */}
         </div>
         <div className="search-container">
           <FaSearch className="search-icon" />
@@ -49,7 +49,7 @@ const Header = ({
         </div>
       </div>
       <div className="header-right">
-        <ThemeToggle />
+        <ThemeToggle isDarkMode={isDarkMode} toggleDarkMode={toggleDarkMode} />
         <div className="user-info">
           <div className="user-avatar">{getInitials(username)}</div>
           <span className="username">{username}</span>

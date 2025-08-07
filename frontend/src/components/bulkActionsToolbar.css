@@ -1,0 +1,53 @@
+.bulk-actions-toolbar {
+  background: #ccc !important;
+  color: rgb(23, 23, 23);
+  padding: 10px 16px;
+  border-radius: 8px;
+  margin-bottom: 15px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 500;
+}
+
+.bulk-actions-toolbar button {
+  background: linear-gradient(90deg, #4471b5, #9fcee3) !important;
+  color: white !important;
+  border: none;
+  padding: 6px 10px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.bulk-actions-toolbar button:hover {
+  background: linear-gradient(90deg, #396cb8, #4c86a1) !important;
+}
+
+.dark .bulk-actions-toolbar {
+  background: #333c3f !important;
+  color: #f0f0f0;
+  padding: 10px 16px;
+  border-radius: 8px;
+  margin-bottom: 15px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 500;
+}
+
+.dark .bulk-actions-toolbar button {
+  background: linear-gradient(90deg, #274472, #1b262c) !important;
+  color: white !important;
+  border: none;
+  padding: 6px 10px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.dark .bulk-actions-toolbar button:hover {
+  background: linear-gradient(90deg, #1a365d, #0f2027) !important;
+}
