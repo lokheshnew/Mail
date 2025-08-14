@@ -105,7 +105,9 @@
   color: var(--text-primary);
 }
 
-.input, .textarea, .select {
+.input,
+.textarea,
+.select {
   padding: var(--space-3) var(--space-4);
   border: 2px solid var(--border-primary);
   border-radius: var(--radius-lg);
@@ -116,7 +118,9 @@
   font-family: inherit;
 }
 
-.input:focus, .textarea:focus, .select:focus {
+.input:focus,
+.textarea:focus,
+.select:focus {
   outline: none;
   border-color: var(--primary-500);
   box-shadow: 0 0 0 3px var(--primary-200);
@@ -128,7 +132,8 @@
   box-shadow: 0 0 0 3px var(--primary-800);
 }
 
-.input:disabled, .textarea:disabled {
+.input:disabled,
+.textarea:disabled {
   background: var(--bg-tertiary);
   cursor: not-allowed;
   opacity: 0.6;
@@ -262,10 +267,15 @@
 }
 
 .avatar::before {
-  content: '';
+  content: "";
   position: absolute;
   inset: 0;
-  background: linear-gradient(45deg, transparent 30%, rgba(255,255,255,0.1) 50%, transparent 70%);
+  background: linear-gradient(
+    45deg,
+    transparent 30%,
+    rgba(255, 255, 255, 0.1) 50%,
+    transparent 70%
+  );
   transform: translateX(-100%);
   transition: transform 0.6s;
 }
@@ -378,8 +388,12 @@
 }
 
 @keyframes loading {
-  0% { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
 }
 
 /* Toast Customization */
@@ -551,7 +565,7 @@
 }
 
 .progress-bar::after {
-  content: '';
+  content: "";
   position: absolute;
   top: 0;
   left: 0;
@@ -567,8 +581,12 @@
 }
 
 @keyframes shimmer {
-  0% { transform: translateX(-100%); }
-  100% { transform: translateX(100%); }
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
 }
 
 /* Tooltip */
@@ -749,10 +767,11 @@
 [data-theme="dark"] .nav-item.active {
   background: var(--primary-900);
   color: var(--primary-200);
+  background-color: grey;
 }
 
 .nav-item.active::before {
-  content: '';
+  content: "";
   position: absolute;
   left: 0;
   top: 50%;
@@ -784,11 +803,18 @@
 .nav-item.active .nav-count {
   background: var(--primary-600);
   color: var(--text-inverse);
+  background-color: darkgray;
 }
 
 [data-theme="dark"] .nav-count {
   background: var(--secondary-700);
   color: var(--secondary-200);
+}
+
+[data-theme="dark"] {
+  --header-bg: linear-gradient(to right, #1f1d2b, #2e2d3c);
+  --text-primary: #f8fafc;
+  --text-tertiary: #94a3b8;
 }
 
 /* Form Enhancements */
@@ -849,7 +875,7 @@
 }
 
 .checkbox:checked::after {
-  content: '✓';
+  content: "✓";
   position: absolute;
   top: 50%;
   left: 50%;
@@ -860,7 +886,7 @@
 }
 
 .radio:checked::after {
-  content: '';
+  content: "";
   position: absolute;
   top: 50%;
   left: 50%;
@@ -883,28 +909,64 @@
 
 /* Responsive Utilities */
 @media (max-width: 640px) {
-  .sm\:hidden { display: none; }
-  .sm\:block { display: block; }
-  .sm\:flex { display: flex; }
-  .sm\:grid { display: grid; }
-  .sm\:text-sm { font-size: 0.875rem; }
-  .sm\:p-4 { padding: var(--space-4); }
-  .sm\:gap-2 { gap: var(--space-2); }
+  .sm\:hidden {
+    display: none;
+  }
+  .sm\:block {
+    display: block;
+  }
+  .sm\:flex {
+    display: flex;
+  }
+  .sm\:grid {
+    display: grid;
+  }
+  .sm\:text-sm {
+    font-size: 0.875rem;
+  }
+  .sm\:p-4 {
+    padding: var(--space-4);
+  }
+  .sm\:gap-2 {
+    gap: var(--space-2);
+  }
 }
 
 @media (max-width: 768px) {
-  .md\:hidden { display: none; }
-  .md\:block { display: block; }
-  .md\:flex { display: flex; }
-  .md\:grid { display: grid; }
-  .md\:text-base { font-size: 1rem; }
-  .md\:p-6 { padding: var(--space-6); }
-  .md\:gap-4 { gap: var(--space-4); }
+  .md\:hidden {
+    display: none;
+  }
+  .md\:block {
+    display: block;
+  }
+  .md\:flex {
+    display: flex;
+  }
+  .md\:grid {
+    display: grid;
+  }
+  .md\:text-base {
+    font-size: 1rem;
+  }
+  .md\:p-6 {
+    padding: var(--space-6);
+  }
+  .md\:gap-4 {
+    gap: var(--space-4);
+  }
 }
 
 @media (max-width: 1024px) {
-  .lg\:hidden { display: none; }
-  .lg\:block { display: block; }
-  .lg\:flex { display: flex; }
-  .lg\:grid { display: grid; }
+  .lg\:hidden {
+    display: none;
+  }
+  .lg\:block {
+    display: block;
+  }
+  .lg\:flex {
+    display: flex;
+  }
+  .lg\:grid {
+    display: grid;
+  }
 }

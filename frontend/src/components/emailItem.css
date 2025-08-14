@@ -1,0 +1,313 @@
+/* .email-item {
+  background-color: white;
+  font-weight: normal;
+  transition: background-color 0.3s ease, font-weight 0.3s ease;
+} */
+
+.email-item-wrapper {
+  background: #fdfdff;
+  border-left: 4px solid #a0c4ff;
+  border-radius: 12px;
+  padding: 16px 20px;
+  margin-bottom: 14px;
+  box-shadow: 0 3px 8px rgba(160, 196, 255, 0.15);
+  transition: all 0.3s ease;
+  cursor: pointer;
+  position: relative;
+}
+
+.email-item-wrapper:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.15);
+}
+
+.email-item-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.sender-avatar {
+  background: linear-gradient(135deg, #c3bef0, #a0c4ff) !important;
+  color: white;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 15px;
+  box-shadow: 0 2px 6px rgba(160, 196, 255, 0.4) !important;
+}
+
+.sender-name {
+  font-weight: 600;
+  font-size: 15px;
+  margin-bottom: 4px;
+  color: #5a5d8f !important;
+}
+
+.email-subject {
+  font-weight: 500;
+  color: #866f8b !important;
+  margin-bottom: 2px;
+}
+
+.email-meta {
+  flex: 1;
+}
+
+.sender-name {
+  font-weight: 600;
+  font-size: 15px;
+  margin-bottom: 4px;
+  color: #3b3b58;
+}
+
+.email-subject {
+  font-weight: 500;
+  color: #4a4e69;
+  margin-bottom: 2px;
+}
+
+.email-preview {
+  color: #7d8597;
+  font-size: 13px;
+}
+
+.email-date {
+  font-size: 12.5px;
+  color: #9ba1b3;
+}
+
+.email-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.email-detail {
+  background-color: #f6f8ff;
+  border-radius: 10px;
+  padding: 14px;
+  margin-top: 10px;
+  animation: fadeIn 0.3s ease-in-out;
+  border-left: 4px solid #a3c4f3;
+}
+
+.email-full-header h4 {
+  margin: 0 0 10px 0;
+  color: #444a59;
+}
+
+.email-addresses div {
+  font-size: 13px;
+  margin-bottom: 4px;
+  color: #636e72;
+}
+
+.email-body {
+  margin-top: 10px;
+  font-size: 14px;
+  line-height: 1.6;
+  color: #495057;
+}
+
+.email-attachment {
+  margin-top: 12px;
+}
+
+.attachment-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #ecefff;
+  padding: 8px 12px;
+  border-radius: 8px;
+}
+
+.attachment-icon {
+  font-size: 18px;
+  color: #7e8df5;
+}
+
+.schedule-actions {
+  margin-top: 24px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: scaleY(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scaleY(1);
+  }
+}
+
+.email-actions button,
+.scheduled-actions button,
+.trash-actions button,
+.draft-actions button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1rem;
+  /* padding: var(--space-2); */
+  /* border-radius: var(--radius-md); */
+  /* transition: all var(--transition-fast); */
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.email-actions button:hover,
+.scheduled-actions button:hover,
+.trash-actions button:hover,
+.draft-actions button:hover {
+  transform: scale(1.6);
+}
+
+/* DARK MODE STYLES */
+.email-item-wrapper.dark {
+  background-color: #1e1e2f;
+  color: #e0e6f0;
+  border-left: 4px solid #5e81ac;
+  box-shadow: 0 3px 6px rgba(94, 129, 172, 0.2);
+}
+
+.email-item-wrapper.dark:hover {
+  background-color: #2a2a40;
+  box-shadow: 0 5px 10px rgba(94, 129, 172, 0.3);
+}
+
+.email-item-wrapper.dark .sender-avatar {
+  background: linear-gradient(135deg, #434c5e, #5e81ac) !important;
+  color: #eceff4;
+  box-shadow: 0 2px 6px rgba(94, 129, 172, 0.4);
+}
+
+.email-item-wrapper.dark .sender-name {
+  color: #eceff4 !important;
+}
+
+.email-item-wrapper.dark .email-subject {
+  color: #d8dee9 !important;
+}
+
+.email-item-wrapper.dark .email-preview {
+  color: #a0a5b8 !important;
+}
+
+.email-item-wrapper.dark .email-date {
+  color: #888ea4 !important;
+}
+
+.email-item-wrapper.dark .email-detail {
+  background-color: #454572;
+  border-left: 4px solid #81a1c1;
+}
+
+.email-item-wrapper.dark .email-full-header h4 {
+  color: #e5e9f0;
+}
+
+.email-item-wrapper.dark .email-addresses div {
+  color: #b0b5c0;
+}
+
+.email-item-wrapper.dark .email-body {
+  color: #cdd6f4;
+  background-color: #1c1c4e !important;
+  padding: 1rem;
+  border-radius: 12px;
+}
+
+.email-item-wrapper.dark .email-attachment {
+  background: #2e3440;
+  padding: 0.5rem;
+  border-radius: 6px;
+}
+
+.email-item-wrapper.dark .attachment-icon {
+  color: #81a1c1;
+}
+
+.email-item-wrapper.dark .attachment-link {
+  color: #88c0d0;
+  text-decoration: underline;
+}
+
+.email-item-wrapper.dark .email-actions button {
+  color: #cbd5e1;
+  background-color: transparent;
+}
+
+.email-item-wrapper.dark .attachment-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #1e1e1f;
+  padding: 8px 12px;
+  border-radius: 8px;
+}
+
+.email-item-wrapper.unread {
+  background-color: #f6f3ff;
+  font-weight: 600;
+}
+
+.email-item-wrapper.read {
+  background-color: #ffffff;
+  font-weight: normal;
+}
+
+.email-item {
+  transition: background-color 0.3s ease, font-weight 0.3s ease;
+}
+
+/* Dark mode wrapper */
+.email-item-wrapper.dark.unread {
+  background-color: #2e3036; /* dark gray for unread */
+  font-weight: 600;
+  color: #e0e0e0; /* light text */
+}
+
+.email-item-wrapper.dark.read {
+  background-color: #2a2a2a; /* slightly darker gray for read */
+  font-weight: normal;
+  color: #cfcfcf; /* lighter gray text */
+}
+
+.email-item.dark {
+  transition: background-color 0.3s ease, font-weight 0.3s ease;
+}
+
+/* Selected email in dark mode */
+.email-item.dark.selected {
+  background-color: #444; /* highlight selected email */
+}
+
+/* Hover effect in dark mode */
+.email-item.dark:hover {
+  background-color: #3f3f3f;
+}
+
+/* Unread indicator for dark mode */
+.email-item-wrapper.dark.unread .sender-name,
+.email-item-wrapper.dark.unread .email-subject {
+  font-weight: 600;
+  color: #f0f0f0;
+}
+
+/* Marking read/unread animation (optional) */
+.email-item.dark.marking-read {
+  background-color: #555; /* subtle flash when marking read */
+}

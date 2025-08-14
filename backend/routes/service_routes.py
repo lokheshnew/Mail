@@ -1,5 +1,3 @@
-# routes/service_routes.py - Fixed syntax error around line 491
-
 from flask import Blueprint, request, jsonify
 from models.user import load_users, is_supported_email, authenticate_user, get_client_secret
 from models.company import get_company_by_domain
@@ -1128,1099 +1126,1099 @@ def auth_service_info():
 #encrypted authentication service
 # Add these encrypted authentication endpoints to your service_routes.py
 
-@service_bp.route('/encrypted_pure_auth', methods=['POST'])
-def encrypted_pure_authentication():
-    """
-    Pure authentication API with encrypted payload support
+# @service_bp.route('/encrypted_pure_auth', methods=['POST'])
+# def encrypted_pure_authentication():
+#     """
+#     Pure authentication API with encrypted payload support
     
-    Request:
-    {
-        "encrypted_data": "base64_encoded_encrypted_payload",
-        "client_secret": "optional_user_specific_secret"
-    }
+#     Request:
+#     {
+#         "encrypted_data": "base64_encoded_encrypted_payload",
+#         "client_secret": "optional_user_specific_secret"
+#     }
     
-    Encrypted Payload Structure:
-    {
-        "email": "user@domain.com",
-        "password": "userpassword",
-        "token_expiry_minutes": 60,
-        "encryption_password": "optional_custom_password"
-    }
+#     Encrypted Payload Structure:
+#     {
+#         "email": "user@domain.com",
+#         "password": "userpassword",
+#         "token_expiry_minutes": 60,
+#         "encryption_password": "optional_custom_password"
+#     }
     
-    Headers:
-    - X-API-KEY: Required API key
-    - X-CLIENT-SECRET: Optional user-specific encryption password
-    - X-ENCRYPTION-PASSWORD: Optional custom encryption password
+#     Headers:
+#     - X-API-KEY: Required API key
+#     - X-CLIENT-SECRET: Optional user-specific encryption password
+#     - X-ENCRYPTION-PASSWORD: Optional custom encryption password
     
-    Response (Encrypted):
-    {
-        "encrypted_response": "base64_encoded_encrypted_response"
-    }
+#     Response (Encrypted):
+#     {
+#         "encrypted_response": "base64_encoded_encrypted_response"
+#     }
     
-    Decrypted Response Structure:
-    {
-        "authenticated": true,
-        "access_token": "jwt_token_here",
-        "refresh_token": "secure_refresh_token",
-        "token_type": "Bearer",
-        "expires_in": 3600,
-        "expires_at": "2025-08-13T15:30:00Z",
-        "user_info": {
-            "user_id": "user123",
-            "email": "user@domain.com",
-            "username": "John Doe"
-        },
-        "encryption_info": {
-            "response_encrypted": true,
-            "algorithm": "AES-256-GCM"
-        }
-    }
-    """
-    try:
-        # Validate API key
-        valid, error = validate_api_key()
-        if not valid:
-            return jsonify({'error': error}), 401
+#     Decrypted Response Structure:
+#     {
+#         "authenticated": true,
+#         "access_token": "jwt_token_here",
+#         "refresh_token": "secure_refresh_token",
+#         "token_type": "Bearer",
+#         "expires_in": 3600,
+#         "expires_at": "2025-08-13T15:30:00Z",
+#         "user_info": {
+#             "user_id": "user123",
+#             "email": "user@domain.com",
+#             "username": "John Doe"
+#         },
+#         "encryption_info": {
+#             "response_encrypted": true,
+#             "algorithm": "AES-256-GCM"
+#         }
+#     }
+#     """
+#     try:
+#         # Validate API key
+#         valid, error = validate_api_key()
+#         if not valid:
+#             return jsonify({'error': error}), 401
         
-        data = request.get_json()
-        if not data:
-            return jsonify({'error': 'Request body is required'}), 400
+#         data = request.get_json()
+#         if not data:
+#             return jsonify({'error': 'Request body is required'}), 400
         
-        encrypted_payload = data.get('encrypted_data')
-        if not encrypted_payload:
-            return jsonify({'error': 'Encrypted data is required'}), 400
+#         encrypted_payload = data.get('encrypted_data')
+#         if not encrypted_payload:
+#             return jsonify({'error': 'Encrypted data is required'}), 400
         
-        # Get decryption password from multiple sources
-        decryption_password = (
-            data.get('client_secret') or
-            request.headers.get('X-CLIENT-SECRET') or
-            request.headers.get('X-ENCRYPTION-PASSWORD') or
-            "default_password"
-        )
+#         # Get decryption password from multiple sources
+#         decryption_password = (
+#             data.get('client_secret') or
+#             request.headers.get('X-CLIENT-SECRET') or
+#             request.headers.get('X-ENCRYPTION-PASSWORD') or
+#             "default_password"
+#         )
         
-        # Decrypt the payload
-        try:
-            decrypted_data = decrypt_data(encrypted_payload, decryption_password)
+#         # Decrypt the payload
+#         try:
+#             decrypted_data = decrypt_data(encrypted_payload, decryption_password)
             
-            # Handle decryption error
-            if isinstance(decrypted_data, str) and decrypted_data.startswith("Decryption failed"):
-                return jsonify({
-                    'authenticated': False,
-                    'error': 'Failed to decrypt payload',
-                    'details': decrypted_data
-                }), 400
+#             # Handle decryption error
+#             if isinstance(decrypted_data, str) and decrypted_data.startswith("Decryption failed"):
+#                 return jsonify({
+#                     'authenticated': False,
+#                     'error': 'Failed to decrypt payload',
+#                     'details': decrypted_data
+#                 }), 400
             
-            # Ensure decrypted_data is a dictionary
-            if isinstance(decrypted_data, str):
-                try:
-                    decrypted_data = json.loads(decrypted_data)
-                except json.JSONDecodeError:
-                    return jsonify({
-                        'authenticated': False,
-                        'error': 'Invalid encrypted payload format'
-                    }), 400
+#             # Ensure decrypted_data is a dictionary
+#             if isinstance(decrypted_data, str):
+#                 try:
+#                     decrypted_data = json.loads(decrypted_data)
+#                 except json.JSONDecodeError:
+#                     return jsonify({
+#                         'authenticated': False,
+#                         'error': 'Invalid encrypted payload format'
+#                     }), 400
                     
-        except Exception as e:
-            return jsonify({
-                'authenticated': False,
-                'error': f'Decryption failed: {str(e)}'
-            }), 400
+#         except Exception as e:
+#             return jsonify({
+#                 'authenticated': False,
+#                 'error': f'Decryption failed: {str(e)}'
+#             }), 400
         
-        # Extract authentication data
-        email = decrypted_data.get('email', '').strip().lower()
-        password = decrypted_data.get('password', '')
-        token_expiry_minutes = decrypted_data.get('token_expiry_minutes', 60)
-        response_encryption_password = decrypted_data.get('encryption_password', decryption_password)
+#         # Extract authentication data
+#         email = decrypted_data.get('email', '').strip().lower()
+#         password = decrypted_data.get('password', '')
+#         token_expiry_minutes = decrypted_data.get('token_expiry_minutes', 60)
+#         response_encryption_password = decrypted_data.get('encryption_password', decryption_password)
         
-        # Validate input
-        if not all([email, password]):
-            error_response = {
-                'authenticated': False,
-                'error': 'Email and password are required',
-                'timestamp': datetime.utcnow().isoformat() + 'Z'
-            }
-            encrypted_error = encrypt_data(error_response, response_encryption_password)
-            return jsonify({'encrypted_response': encrypted_error}), 400
+#         # Validate input
+#         if not all([email, password]):
+#             error_response = {
+#                 'authenticated': False,
+#                 'error': 'Email and password are required',
+#                 'timestamp': datetime.utcnow().isoformat() + 'Z'
+#             }
+#             encrypted_error = encrypt_data(error_response, response_encryption_password)
+#             return jsonify({'encrypted_response': encrypted_error}), 400
         
-        # Validate token expiry (max 24 hours)
-        if not isinstance(token_expiry_minutes, int) or token_expiry_minutes < 5 or token_expiry_minutes > 1440:
-            error_response = {
-                'authenticated': False,
-                'error': 'Token expiry must be between 5 and 1440 minutes',
-                'timestamp': datetime.utcnow().isoformat() + 'Z'
-            }
-            encrypted_error = encrypt_data(error_response, response_encryption_password)
-            return jsonify({'encrypted_response': encrypted_error}), 400
+#         # Validate token expiry (max 24 hours)
+#         if not isinstance(token_expiry_minutes, int) or token_expiry_minutes < 5 or token_expiry_minutes > 1440:
+#             error_response = {
+#                 'authenticated': False,
+#                 'error': 'Token expiry must be between 5 and 1440 minutes',
+#                 'timestamp': datetime.utcnow().isoformat() + 'Z'
+#             }
+#             encrypted_error = encrypt_data(error_response, response_encryption_password)
+#             return jsonify({'encrypted_response': encrypted_error}), 400
         
-        # Authenticate user using existing system
-        user, auth_error = authenticate_user(email, password)
+#         # Authenticate user using existing system
+#         user, auth_error = authenticate_user(email, password)
         
-        if auth_error:
-            error_response = {
-                'authenticated': False,
-                'error': auth_error,
-                'timestamp': datetime.utcnow().isoformat() + 'Z'
-            }
-            encrypted_error = encrypt_data(error_response, response_encryption_password)
-            return jsonify({'encrypted_response': encrypted_error}), 401
+#         if auth_error:
+#             error_response = {
+#                 'authenticated': False,
+#                 'error': auth_error,
+#                 'timestamp': datetime.utcnow().isoformat() + 'Z'
+#             }
+#             encrypted_error = encrypt_data(error_response, response_encryption_password)
+#             return jsonify({'encrypted_response': encrypted_error}), 401
         
-        # Generate access token
-        access_token = generate_access_token(user, token_expiry_minutes)
+#         # Generate access token
+#         access_token = generate_access_token(user, token_expiry_minutes)
         
-        if not access_token:
-            error_response = {
-                'authenticated': False,
-                'error': 'Failed to generate access token',
-                'timestamp': datetime.utcnow().isoformat() + 'Z'
-            }
-            encrypted_error = encrypt_data(error_response, response_encryption_password)
-            return jsonify({'encrypted_response': encrypted_error}), 500
+#         if not access_token:
+#             error_response = {
+#                 'authenticated': False,
+#                 'error': 'Failed to generate access token',
+#                 'timestamp': datetime.utcnow().isoformat() + 'Z'
+#             }
+#             encrypted_error = encrypt_data(error_response, response_encryption_password)
+#             return jsonify({'encrypted_response': encrypted_error}), 500
         
-        # Generate refresh token
-        refresh_token = generate_refresh_token(email)
+#         # Generate refresh token
+#         refresh_token = generate_refresh_token(email)
         
-        # Calculate expiry time
-        expires_at = datetime.utcnow() + timedelta(minutes=token_expiry_minutes)
-        expires_in_seconds = token_expiry_minutes * 60
+#         # Calculate expiry time
+#         expires_at = datetime.utcnow() + timedelta(minutes=token_expiry_minutes)
+#         expires_in_seconds = token_expiry_minutes * 60
         
-        # Prepare success response
-        success_response = {
-            'authenticated': True,
-            'access_token': access_token,
-            'refresh_token': refresh_token,
-            'token_type': 'Bearer',
-            'expires_in': expires_in_seconds,
-            'expires_at': expires_at.isoformat() + 'Z',
-            'user_info': {
-                'user_id': user.get('user_id'),
-                'email': user.get('email'),
-                'username': user.get('username')
-            },
-            'encryption_info': {
-                'response_encrypted': True,
-                'algorithm': 'AES-256-GCM',
-                'decryption_password_used': 'client_secret' if decryption_password != 'default_password' else 'default'
-            },
-            'timestamp': datetime.utcnow().isoformat() + 'Z'
-        }
+#         # Prepare success response
+#         success_response = {
+#             'authenticated': True,
+#             'access_token': access_token,
+#             'refresh_token': refresh_token,
+#             'token_type': 'Bearer',
+#             'expires_in': expires_in_seconds,
+#             'expires_at': expires_at.isoformat() + 'Z',
+#             'user_info': {
+#                 'user_id': user.get('user_id'),
+#                 'email': user.get('email'),
+#                 'username': user.get('username')
+#             },
+#             'encryption_info': {
+#                 'response_encrypted': True,
+#                 'algorithm': 'AES-256-GCM',
+#                 'decryption_password_used': 'client_secret' if decryption_password != 'default_password' else 'default'
+#             },
+#             'timestamp': datetime.utcnow().isoformat() + 'Z'
+#         }
         
-        # Encrypt the response
-        encrypted_response = encrypt_data(success_response, response_encryption_password)
+#         # Encrypt the response
+#         encrypted_response = encrypt_data(success_response, response_encryption_password)
         
-        return jsonify({
-            'encrypted_response': encrypted_response,
-            'encryption_note': 'Response is encrypted with the same password used for request decryption'
-        }), 200
+#         return jsonify({
+#             'encrypted_response': encrypted_response,
+#             'encryption_note': 'Response is encrypted with the same password used for request decryption'
+#         }), 200
         
-    except Exception as e:
-        error_response = {
-            'authenticated': False,
-            'error': f'Authentication failed: {str(e)}',
-            'timestamp': datetime.utcnow().isoformat() + 'Z'
-        }
+#     except Exception as e:
+#         error_response = {
+#             'authenticated': False,
+#             'error': f'Authentication failed: {str(e)}',
+#             'timestamp': datetime.utcnow().isoformat() + 'Z'
+#         }
         
-        # Try to encrypt error response if possible
-        try:
-            decryption_password = (
-                data.get('client_secret') or
-                request.headers.get('X-CLIENT-SECRET') or
-                request.headers.get('X-ENCRYPTION-PASSWORD') or
-                "default_password"
-            )
-            encrypted_error = encrypt_data(error_response, decryption_password)
-            return jsonify({'encrypted_response': encrypted_error}), 500
-        except:
-            return jsonify(error_response), 500
+#         # Try to encrypt error response if possible
+#         try:
+#             decryption_password = (
+#                 data.get('client_secret') or
+#                 request.headers.get('X-CLIENT-SECRET') or
+#                 request.headers.get('X-ENCRYPTION-PASSWORD') or
+#                 "default_password"
+#             )
+#             encrypted_error = encrypt_data(error_response, decryption_password)
+#             return jsonify({'encrypted_response': encrypted_error}), 500
+#         except:
+#             return jsonify(error_response), 500
 
-@service_bp.route('/encrypted_refresh_token', methods=['POST'])
-def encrypted_refresh_access_token():
-    """
-    Refresh access token using encrypted refresh token payload
+# @service_bp.route('/encrypted_refresh_token', methods=['POST'])
+# def encrypted_refresh_access_token():
+#     """
+#     Refresh access token using encrypted refresh token payload
     
-    Request:
-    {
-        "encrypted_data": "base64_encoded_encrypted_payload",
-        "client_secret": "optional_user_specific_secret"
-    }
+#     Request:
+#     {
+#         "encrypted_data": "base64_encoded_encrypted_payload",
+#         "client_secret": "optional_user_specific_secret"
+#     }
     
-    Encrypted Payload Structure:
-    {
-        "refresh_token": "secure_refresh_token_here",
-        "token_expiry_minutes": 60,
-        "encryption_password": "optional_custom_password"
-    }
-    """
-    try:
-        # Validate API key
-        valid, error = validate_api_key()
-        if not valid:
-            return jsonify({'error': error}), 401
+#     Encrypted Payload Structure:
+#     {
+#         "refresh_token": "secure_refresh_token_here",
+#         "token_expiry_minutes": 60,
+#         "encryption_password": "optional_custom_password"
+#     }
+#     """
+#     try:
+#         # Validate API key
+#         valid, error = validate_api_key()
+#         if not valid:
+#             return jsonify({'error': error}), 401
         
-        data = request.get_json()
-        if not data:
-            return jsonify({'error': 'Request body is required'}), 400
+#         data = request.get_json()
+#         if not data:
+#             return jsonify({'error': 'Request body is required'}), 400
         
-        encrypted_payload = data.get('encrypted_data')
-        if not encrypted_payload:
-            return jsonify({'error': 'Encrypted data is required'}), 400
+#         encrypted_payload = data.get('encrypted_data')
+#         if not encrypted_payload:
+#             return jsonify({'error': 'Encrypted data is required'}), 400
         
-        # Get decryption password
-        decryption_password = (
-            data.get('client_secret') or
-            request.headers.get('X-CLIENT-SECRET') or
-            request.headers.get('X-ENCRYPTION-PASSWORD') or
-            "default_password"
-        )
+#         # Get decryption password
+#         decryption_password = (
+#             data.get('client_secret') or
+#             request.headers.get('X-CLIENT-SECRET') or
+#             request.headers.get('X-ENCRYPTION-PASSWORD') or
+#             "default_password"
+#         )
         
-        # Decrypt the payload
-        try:
-            decrypted_data = decrypt_data(encrypted_payload, decryption_password)
+#         # Decrypt the payload
+#         try:
+#             decrypted_data = decrypt_data(encrypted_payload, decryption_password)
             
-            if isinstance(decrypted_data, str) and decrypted_data.startswith("Decryption failed"):
-                return jsonify({
-                    'success': False,
-                    'error': 'Failed to decrypt payload',
-                    'details': decrypted_data
-                }), 400
+#             if isinstance(decrypted_data, str) and decrypted_data.startswith("Decryption failed"):
+#                 return jsonify({
+#                     'success': False,
+#                     'error': 'Failed to decrypt payload',
+#                     'details': decrypted_data
+#                 }), 400
             
-            if isinstance(decrypted_data, str):
-                try:
-                    decrypted_data = json.loads(decrypted_data)
-                except json.JSONDecodeError:
-                    return jsonify({
-                        'success': False,
-                        'error': 'Invalid encrypted payload format'
-                    }), 400
+#             if isinstance(decrypted_data, str):
+#                 try:
+#                     decrypted_data = json.loads(decrypted_data)
+#                 except json.JSONDecodeError:
+#                     return jsonify({
+#                         'success': False,
+#                         'error': 'Invalid encrypted payload format'
+#                     }), 400
                     
-        except Exception as e:
-            return jsonify({
-                'success': False,
-                'error': f'Decryption failed: {str(e)}'
-            }), 400
+#         except Exception as e:
+#             return jsonify({
+#                 'success': False,
+#                 'error': f'Decryption failed: {str(e)}'
+#             }), 400
         
-        refresh_token = decrypted_data.get('refresh_token', '')
-        token_expiry_minutes = decrypted_data.get('token_expiry_minutes', 60)
-        response_encryption_password = decrypted_data.get('encryption_password', decryption_password)
+#         refresh_token = decrypted_data.get('refresh_token', '')
+#         token_expiry_minutes = decrypted_data.get('token_expiry_minutes', 60)
+#         response_encryption_password = decrypted_data.get('encryption_password', decryption_password)
         
-        if not refresh_token:
-            error_response = {
-                'success': False,
-                'error': 'Refresh token is required'
-            }
-            encrypted_error = encrypt_data(error_response, response_encryption_password)
-            return jsonify({'encrypted_response': encrypted_error}), 400
+#         if not refresh_token:
+#             error_response = {
+#                 'success': False,
+#                 'error': 'Refresh token is required'
+#             }
+#             encrypted_error = encrypt_data(error_response, response_encryption_password)
+#             return jsonify({'encrypted_response': encrypted_error}), 400
         
-        # Validate token expiry
-        if not isinstance(token_expiry_minutes, int) or token_expiry_minutes < 5 or token_expiry_minutes > 1440:
-            error_response = {
-                'success': False,
-                'error': 'Token expiry must be between 5 and 1440 minutes'
-            }
-            encrypted_error = encrypt_data(error_response, response_encryption_password)
-            return jsonify({'encrypted_response': encrypted_error}), 400
+#         # Validate token expiry
+#         if not isinstance(token_expiry_minutes, int) or token_expiry_minutes < 5 or token_expiry_minutes > 1440:
+#             error_response = {
+#                 'success': False,
+#                 'error': 'Token expiry must be between 5 and 1440 minutes'
+#             }
+#             encrypted_error = encrypt_data(error_response, response_encryption_password)
+#             return jsonify({'encrypted_response': encrypted_error}), 400
         
-        # Validate refresh token (using existing function)
-        token_data, error = validate_refresh_token(refresh_token)
+#         # Validate refresh token (using existing function)
+#         token_data, error = validate_refresh_token(refresh_token)
         
-        if error:
-            error_response = {
-                'success': False,
-                'error': error
-            }
-            encrypted_error = encrypt_data(error_response, response_encryption_password)
-            return jsonify({'encrypted_response': encrypted_error}), 401
+#         if error:
+#             error_response = {
+#                 'success': False,
+#                 'error': error
+#             }
+#             encrypted_error = encrypt_data(error_response, response_encryption_password)
+#             return jsonify({'encrypted_response': encrypted_error}), 401
         
-        user_email = token_data['email']
+#         user_email = token_data['email']
         
-        # Get user data for new token
-        users = load_users()
-        if user_email not in users:
-            error_response = {
-                'success': False,
-                'error': 'User not found'
-            }
-            encrypted_error = encrypt_data(error_response, response_encryption_password)
-            return jsonify({'encrypted_response': encrypted_error}), 404
+#         # Get user data for new token
+#         users = load_users()
+#         if user_email not in users:
+#             error_response = {
+#                 'success': False,
+#                 'error': 'User not found'
+#             }
+#             encrypted_error = encrypt_data(error_response, response_encryption_password)
+#             return jsonify({'encrypted_response': encrypted_error}), 404
         
-        user_data = users[user_email]
+#         user_data = users[user_email]
         
-        # Check if user is still active
-        if user_data.get('status') != 'active':
-            error_response = {
-                'success': False,
-                'error': 'User account is inactive'
-            }
-            encrypted_error = encrypt_data(error_response, response_encryption_password)
-            return jsonify({'encrypted_response': encrypted_error}), 403
+#         # Check if user is still active
+#         if user_data.get('status') != 'active':
+#             error_response = {
+#                 'success': False,
+#                 'error': 'User account is inactive'
+#             }
+#             encrypted_error = encrypt_data(error_response, response_encryption_password)
+#             return jsonify({'encrypted_response': encrypted_error}), 403
         
-        # Mark old refresh token as used
-        REFRESH_TOKENS[refresh_token]['used'] = True
+#         # Mark old refresh token as used
+#         REFRESH_TOKENS[refresh_token]['used'] = True
         
-        # Generate new tokens
-        new_access_token = generate_access_token(user_data, token_expiry_minutes)
-        new_refresh_token = generate_refresh_token(user_email)
+#         # Generate new tokens
+#         new_access_token = generate_access_token(user_data, token_expiry_minutes)
+#         new_refresh_token = generate_refresh_token(user_email)
         
-        if not new_access_token:
-            error_response = {
-                'success': False,
-                'error': 'Failed to generate new access token'
-            }
-            encrypted_error = encrypt_data(error_response, response_encryption_password)
-            return jsonify({'encrypted_response': encrypted_error}), 500
+#         if not new_access_token:
+#             error_response = {
+#                 'success': False,
+#                 'error': 'Failed to generate new access token'
+#             }
+#             encrypted_error = encrypt_data(error_response, response_encryption_password)
+#             return jsonify({'encrypted_response': encrypted_error}), 500
         
-        # Calculate expiry time
-        expires_at = datetime.utcnow() + timedelta(minutes=token_expiry_minutes)
-        expires_in_seconds = token_expiry_minutes * 60
+#         # Calculate expiry time
+#         expires_at = datetime.utcnow() + timedelta(minutes=token_expiry_minutes)
+#         expires_in_seconds = token_expiry_minutes * 60
         
-        # Clean up old refresh token
-        del REFRESH_TOKENS[refresh_token]
+#         # Clean up old refresh token
+#         del REFRESH_TOKENS[refresh_token]
         
-        # Prepare success response
-        success_response = {
-            'success': True,
-            'access_token': new_access_token,
-            'refresh_token': new_refresh_token,
-            'token_type': 'Bearer',
-            'expires_in': expires_in_seconds,
-            'expires_at': expires_at.isoformat() + 'Z',
-            'user_info': {
-                'user_id': user_data.get('user_id'),
-                'email': user_data.get('email'),
-                'username': user_data.get('username')
-            },
-            'encryption_info': {
-                'response_encrypted': True,
-                'algorithm': 'AES-256-GCM'
-            },
-            'timestamp': datetime.utcnow().isoformat() + 'Z'
-        }
+#         # Prepare success response
+#         success_response = {
+#             'success': True,
+#             'access_token': new_access_token,
+#             'refresh_token': new_refresh_token,
+#             'token_type': 'Bearer',
+#             'expires_in': expires_in_seconds,
+#             'expires_at': expires_at.isoformat() + 'Z',
+#             'user_info': {
+#                 'user_id': user_data.get('user_id'),
+#                 'email': user_data.get('email'),
+#                 'username': user_data.get('username')
+#             },
+#             'encryption_info': {
+#                 'response_encrypted': True,
+#                 'algorithm': 'AES-256-GCM'
+#             },
+#             'timestamp': datetime.utcnow().isoformat() + 'Z'
+#         }
         
-        # Encrypt the response
-        encrypted_response = encrypt_data(success_response, response_encryption_password)
+#         # Encrypt the response
+#         encrypted_response = encrypt_data(success_response, response_encryption_password)
         
-        return jsonify({
-            'encrypted_response': encrypted_response
-        }), 200
+#         return jsonify({
+#             'encrypted_response': encrypted_response
+#         }), 200
         
-    except Exception as e:
-        error_response = {
-            'success': False,
-            'error': f'Token refresh failed: {str(e)}',
-            'timestamp': datetime.utcnow().isoformat() + 'Z'
-        }
+#     except Exception as e:
+#         error_response = {
+#             'success': False,
+#             'error': f'Token refresh failed: {str(e)}',
+#             'timestamp': datetime.utcnow().isoformat() + 'Z'
+#         }
         
-        try:
-            decryption_password = (
-                data.get('client_secret') or
-                request.headers.get('X-CLIENT-SECRET') or
-                request.headers.get('X-ENCRYPTION-PASSWORD') or
-                "default_password"
-            )
-            encrypted_error = encrypt_data(error_response, decryption_password)
-            return jsonify({'encrypted_response': encrypted_error}), 500
-        except:
-            return jsonify(error_response), 500
+#         try:
+#             decryption_password = (
+#                 data.get('client_secret') or
+#                 request.headers.get('X-CLIENT-SECRET') or
+#                 request.headers.get('X-ENCRYPTION-PASSWORD') or
+#                 "default_password"
+#             )
+#             encrypted_error = encrypt_data(error_response, decryption_password)
+#             return jsonify({'encrypted_response': encrypted_error}), 500
+#         except:
+#             return jsonify(error_response), 500
 
-@service_bp.route('/encrypted_verify_token', methods=['POST'])
-def encrypted_verify_access_token():
-    """
-    Verify if an access token is valid using encrypted payload
+# @service_bp.route('/encrypted_verify_token', methods=['POST'])
+# def encrypted_verify_access_token():
+#     """
+#     Verify if an access token is valid using encrypted payload
     
-    Request:
-    {
-        "encrypted_data": "base64_encoded_encrypted_payload",
-        "client_secret": "optional_user_specific_secret"
-    }
+#     Request:
+#     {
+#         "encrypted_data": "base64_encoded_encrypted_payload",
+#         "client_secret": "optional_user_specific_secret"
+#     }
     
-    Encrypted Payload Structure:
-    {
-        "access_token": "jwt_token_here",
-        "encryption_password": "optional_custom_password"
-    }
-    """
-    try:
-        # Validate API key
-        valid, error = validate_api_key()
-        if not valid:
-            return jsonify({'error': error}), 401
+#     Encrypted Payload Structure:
+#     {
+#         "access_token": "jwt_token_here",
+#         "encryption_password": "optional_custom_password"
+#     }
+#     """
+#     try:
+#         # Validate API key
+#         valid, error = validate_api_key()
+#         if not valid:
+#             return jsonify({'error': error}), 401
         
-        data = request.get_json()
-        if not data:
-            return jsonify({'error': 'Request body is required'}), 400
+#         data = request.get_json()
+#         if not data:
+#             return jsonify({'error': 'Request body is required'}), 400
         
-        encrypted_payload = data.get('encrypted_data')
-        if not encrypted_payload:
-            return jsonify({'error': 'Encrypted data is required'}), 400
+#         encrypted_payload = data.get('encrypted_data')
+#         if not encrypted_payload:
+#             return jsonify({'error': 'Encrypted data is required'}), 400
         
-        # Get decryption password
-        decryption_password = (
-            data.get('client_secret') or
-            request.headers.get('X-CLIENT-SECRET') or
-            request.headers.get('X-ENCRYPTION-PASSWORD') or
-            "default_password"
-        )
+#         # Get decryption password
+#         decryption_password = (
+#             data.get('client_secret') or
+#             request.headers.get('X-CLIENT-SECRET') or
+#             request.headers.get('X-ENCRYPTION-PASSWORD') or
+#             "default_password"
+#         )
         
-        # Decrypt the payload
-        try:
-            decrypted_data = decrypt_data(encrypted_payload, decryption_password)
+#         # Decrypt the payload
+#         try:
+#             decrypted_data = decrypt_data(encrypted_payload, decryption_password)
             
-            if isinstance(decrypted_data, str) and decrypted_data.startswith("Decryption failed"):
-                return jsonify({
-                    'valid': False,
-                    'error': 'Failed to decrypt payload'
-                }), 400
+#             if isinstance(decrypted_data, str) and decrypted_data.startswith("Decryption failed"):
+#                 return jsonify({
+#                     'valid': False,
+#                     'error': 'Failed to decrypt payload'
+#                 }), 400
             
-            if isinstance(decrypted_data, str):
-                try:
-                    decrypted_data = json.loads(decrypted_data)
-                except json.JSONDecodeError:
-                    return jsonify({
-                        'valid': False,
-                        'error': 'Invalid encrypted payload format'
-                    }), 400
+#             if isinstance(decrypted_data, str):
+#                 try:
+#                     decrypted_data = json.loads(decrypted_data)
+#                 except json.JSONDecodeError:
+#                     return jsonify({
+#                         'valid': False,
+#                         'error': 'Invalid encrypted payload format'
+#                     }), 400
                     
-        except Exception as e:
-            return jsonify({
-                'valid': False,
-                'error': f'Decryption failed: {str(e)}'
-            }), 400
+#         except Exception as e:
+#             return jsonify({
+#                 'valid': False,
+#                 'error': f'Decryption failed: {str(e)}'
+#             }), 400
         
-        access_token = decrypted_data.get('access_token')
-        response_encryption_password = decrypted_data.get('encryption_password', decryption_password)
+#         access_token = decrypted_data.get('access_token')
+#         response_encryption_password = decrypted_data.get('encryption_password', decryption_password)
         
-        if not access_token:
-            error_response = {
-                'valid': False,
-                'error': 'Access token is required'
-            }
-            encrypted_error = encrypt_data(error_response, response_encryption_password)
-            return jsonify({'encrypted_response': encrypted_error}), 400
+#         if not access_token:
+#             error_response = {
+#                 'valid': False,
+#                 'error': 'Access token is required'
+#             }
+#             encrypted_error = encrypt_data(error_response, response_encryption_password)
+#             return jsonify({'encrypted_response': encrypted_error}), 400
         
-        # Verify token using existing system
-        from utils.auth import SECRET_KEY
+#         # Verify token using existing system
+#         from utils.auth import SECRET_KEY
         
-        try:
-            # Use PyJWT directly for more detailed error handling
-            payload = jwt.decode(access_token, SECRET_KEY, algorithms=['HS256'])
+#         try:
+#             # Use PyJWT directly for more detailed error handling
+#             payload = jwt.decode(access_token, SECRET_KEY, algorithms=['HS256'])
             
-            # Check token type
-            if payload.get('token_type') != 'access':
-                error_response = {
-                    'valid': False,
-                    'error': 'Invalid token type'
-                }
-                encrypted_error = encrypt_data(error_response, response_encryption_password)
-                return jsonify({'encrypted_response': encrypted_error}), 400
+#             # Check token type
+#             if payload.get('token_type') != 'access':
+#                 error_response = {
+#                     'valid': False,
+#                     'error': 'Invalid token type'
+#                 }
+#                 encrypted_error = encrypt_data(error_response, response_encryption_password)
+#                 return jsonify({'encrypted_response': encrypted_error}), 400
             
-            # Calculate time remaining
-            exp = payload.get('exp')
-            time_remaining = exp - datetime.utcnow().timestamp() if exp else 0
+#             # Calculate time remaining
+#             exp = payload.get('exp')
+#             time_remaining = exp - datetime.utcnow().timestamp() if exp else 0
             
-            success_response = {
-                'valid': True,
-                'user_info': {
-                    'user_id': payload.get('user_id'),
-                    'email': payload.get('email'),
-                    'username': payload.get('username')
-                },
-                'expires_at': datetime.fromtimestamp(exp).isoformat() + 'Z' if exp else None,
-                'time_remaining_seconds': max(0, int(time_remaining)),
-                'token_type': payload.get('token_type'),
-                'encryption_info': {
-                    'response_encrypted': True,
-                    'algorithm': 'AES-256-GCM'
-                },
-                'timestamp': datetime.utcnow().isoformat() + 'Z'
-            }
+#             success_response = {
+#                 'valid': True,
+#                 'user_info': {
+#                     'user_id': payload.get('user_id'),
+#                     'email': payload.get('email'),
+#                     'username': payload.get('username')
+#                 },
+#                 'expires_at': datetime.fromtimestamp(exp).isoformat() + 'Z' if exp else None,
+#                 'time_remaining_seconds': max(0, int(time_remaining)),
+#                 'token_type': payload.get('token_type'),
+#                 'encryption_info': {
+#                     'response_encrypted': True,
+#                     'algorithm': 'AES-256-GCM'
+#                 },
+#                 'timestamp': datetime.utcnow().isoformat() + 'Z'
+#             }
             
-            encrypted_response = encrypt_data(success_response, response_encryption_password)
-            return jsonify({'encrypted_response': encrypted_response}), 200
+#             encrypted_response = encrypt_data(success_response, response_encryption_password)
+#             return jsonify({'encrypted_response': encrypted_response}), 200
             
-        except jwt.ExpiredSignatureError:
-            error_response = {
-                'valid': False,
-                'error': 'Token has expired',
-                'expired': True
-            }
-            encrypted_error = encrypt_data(error_response, response_encryption_password)
-            return jsonify({'encrypted_response': encrypted_error}), 401
+#         except jwt.ExpiredSignatureError:
+#             error_response = {
+#                 'valid': False,
+#                 'error': 'Token has expired',
+#                 'expired': True
+#             }
+#             encrypted_error = encrypt_data(error_response, response_encryption_password)
+#             return jsonify({'encrypted_response': encrypted_error}), 401
             
-        except jwt.InvalidTokenError:
-            error_response = {
-                'valid': False,
-                'error': 'Invalid token'
-            }
-            encrypted_error = encrypt_data(error_response, response_encryption_password)
-            return jsonify({'encrypted_response': encrypted_error}), 401
+#         except jwt.InvalidTokenError:
+#             error_response = {
+#                 'valid': False,
+#                 'error': 'Invalid token'
+#             }
+#             encrypted_error = encrypt_data(error_response, response_encryption_password)
+#             return jsonify({'encrypted_response': encrypted_error}), 401
         
-    except Exception as e:
-        error_response = {
-            'valid': False,
-            'error': f'Token verification failed: {str(e)}',
-            'timestamp': datetime.utcnow().isoformat() + 'Z'
-        }
+#     except Exception as e:
+#         error_response = {
+#             'valid': False,
+#             'error': f'Token verification failed: {str(e)}',
+#             'timestamp': datetime.utcnow().isoformat() + 'Z'
+#         }
         
-        try:
-            decryption_password = (
-                data.get('client_secret') or
-                request.headers.get('X-CLIENT-SECRET') or
-                request.headers.get('X-ENCRYPTION-PASSWORD') or
-                "default_password"
-            )
-            encrypted_error = encrypt_data(error_response, decryption_password)
-            return jsonify({'encrypted_response': encrypted_error}), 500
-        except:
-            return jsonify(error_response), 500
+#         try:
+#             decryption_password = (
+#                 data.get('client_secret') or
+#                 request.headers.get('X-CLIENT-SECRET') or
+#                 request.headers.get('X-ENCRYPTION-PASSWORD') or
+#                 "default_password"
+#             )
+#             encrypted_error = encrypt_data(error_response, decryption_password)
+#             return jsonify({'encrypted_response': encrypted_error}), 500
+#         except:
+#             return jsonify(error_response), 500
 
-@service_bp.route('/encrypted_revoke_token', methods=['POST'])
-def encrypted_revoke_token():
-    """
-    Revoke a refresh token using encrypted payload (logout)
+# @service_bp.route('/encrypted_revoke_token', methods=['POST'])
+# def encrypted_revoke_token():
+#     """
+#     Revoke a refresh token using encrypted payload (logout)
     
-    Request:
-    {
-        "encrypted_data": "base64_encoded_encrypted_payload",
-        "client_secret": "optional_user_specific_secret"
-    }
+#     Request:
+#     {
+#         "encrypted_data": "base64_encoded_encrypted_payload",
+#         "client_secret": "optional_user_specific_secret"
+#     }
     
-    Encrypted Payload Structure:
-    {
-        "refresh_token": "refresh_token_to_revoke",
-        "encryption_password": "optional_custom_password"
-    }
-    """
-    try:
-        # Validate API key
-        valid, error = validate_api_key()
-        if not valid:
-            return jsonify({'error': error}), 401
+#     Encrypted Payload Structure:
+#     {
+#         "refresh_token": "refresh_token_to_revoke",
+#         "encryption_password": "optional_custom_password"
+#     }
+#     """
+#     try:
+#         # Validate API key
+#         valid, error = validate_api_key()
+#         if not valid:
+#             return jsonify({'error': error}), 401
         
-        data = request.get_json()
-        if not data:
-            return jsonify({'error': 'Request body is required'}), 400
+#         data = request.get_json()
+#         if not data:
+#             return jsonify({'error': 'Request body is required'}), 400
         
-        encrypted_payload = data.get('encrypted_data')
-        if not encrypted_payload:
-            return jsonify({'error': 'Encrypted data is required'}), 400
+#         encrypted_payload = data.get('encrypted_data')
+#         if not encrypted_payload:
+#             return jsonify({'error': 'Encrypted data is required'}), 400
         
-        # Get decryption password
-        decryption_password = (
-            data.get('client_secret') or
-            request.headers.get('X-CLIENT-SECRET') or
-            request.headers.get('X-ENCRYPTION-PASSWORD') or
-            "default_password"
-        )
+#         # Get decryption password
+#         decryption_password = (
+#             data.get('client_secret') or
+#             request.headers.get('X-CLIENT-SECRET') or
+#             request.headers.get('X-ENCRYPTION-PASSWORD') or
+#             "default_password"
+#         )
         
-        # Decrypt the payload
-        try:
-            decrypted_data = decrypt_data(encrypted_payload, decryption_password)
+#         # Decrypt the payload
+#         try:
+#             decrypted_data = decrypt_data(encrypted_payload, decryption_password)
             
-            if isinstance(decrypted_data, str) and decrypted_data.startswith("Decryption failed"):
-                return jsonify({
-                    'success': False,
-                    'error': 'Failed to decrypt payload'
-                }), 400
+#             if isinstance(decrypted_data, str) and decrypted_data.startswith("Decryption failed"):
+#                 return jsonify({
+#                     'success': False,
+#                     'error': 'Failed to decrypt payload'
+#                 }), 400
             
-            if isinstance(decrypted_data, str):
-                try:
-                    decrypted_data = json.loads(decrypted_data)
-                except json.JSONDecodeError:
-                    return jsonify({
-                        'success': False,
-                        'error': 'Invalid encrypted payload format'
-                    }), 400
+#             if isinstance(decrypted_data, str):
+#                 try:
+#                     decrypted_data = json.loads(decrypted_data)
+#                 except json.JSONDecodeError:
+#                     return jsonify({
+#                         'success': False,
+#                         'error': 'Invalid encrypted payload format'
+#                     }), 400
                     
-        except Exception as e:
-            return jsonify({
-                'success': False,
-                'error': f'Decryption failed: {str(e)}'
-            }), 400
+#         except Exception as e:
+#             return jsonify({
+#                 'success': False,
+#                 'error': f'Decryption failed: {str(e)}'
+#             }), 400
         
-        refresh_token = decrypted_data.get('refresh_token', '')
-        response_encryption_password = decrypted_data.get('encryption_password', decryption_password)
+#         refresh_token = decrypted_data.get('refresh_token', '')
+#         response_encryption_password = decrypted_data.get('encryption_password', decryption_password)
         
-        if not refresh_token:
-            error_response = {
-                'success': False,
-                'error': 'Refresh token is required'
-            }
-            encrypted_error = encrypt_data(error_response, response_encryption_password)
-            return jsonify({'encrypted_response': encrypted_error}), 400
+#         if not refresh_token:
+#             error_response = {
+#                 'success': False,
+#                 'error': 'Refresh token is required'
+#             }
+#             encrypted_error = encrypt_data(error_response, response_encryption_password)
+#             return jsonify({'encrypted_response': encrypted_error}), 400
         
-        # Revoke the refresh token (using existing function)
-        revoked = revoke_refresh_token(refresh_token)
+#         # Revoke the refresh token (using existing function)
+#         revoked = revoke_refresh_token(refresh_token)
         
-        if revoked:
-            success_response = {
-                'success': True,
-                'message': 'Token revoked successfully',
-                'encryption_info': {
-                    'response_encrypted': True,
-                    'algorithm': 'AES-256-GCM'
-                },
-                'timestamp': datetime.utcnow().isoformat() + 'Z'
-            }
-            encrypted_response = encrypt_data(success_response, response_encryption_password)
-            return jsonify({'encrypted_response': encrypted_response}), 200
-        else:
-            error_response = {
-                'success': False,
-                'error': 'Token not found or already revoked',
-                'timestamp': datetime.utcnow().isoformat() + 'Z'
-            }
-            encrypted_error = encrypt_data(error_response, response_encryption_password)
-            return jsonify({'encrypted_response': encrypted_error}), 404
+#         if revoked:
+#             success_response = {
+#                 'success': True,
+#                 'message': 'Token revoked successfully',
+#                 'encryption_info': {
+#                     'response_encrypted': True,
+#                     'algorithm': 'AES-256-GCM'
+#                 },
+#                 'timestamp': datetime.utcnow().isoformat() + 'Z'
+#             }
+#             encrypted_response = encrypt_data(success_response, response_encryption_password)
+#             return jsonify({'encrypted_response': encrypted_response}), 200
+#         else:
+#             error_response = {
+#                 'success': False,
+#                 'error': 'Token not found or already revoked',
+#                 'timestamp': datetime.utcnow().isoformat() + 'Z'
+#             }
+#             encrypted_error = encrypt_data(error_response, response_encryption_password)
+#             return jsonify({'encrypted_response': encrypted_error}), 404
         
-    except Exception as e:
-        error_response = {
-            'success': False,
-            'error': f'Token revocation failed: {str(e)}',
-            'timestamp': datetime.utcnow().isoformat() + 'Z'
-        }
+#     except Exception as e:
+#         error_response = {
+#             'success': False,
+#             'error': f'Token revocation failed: {str(e)}',
+#             'timestamp': datetime.utcnow().isoformat() + 'Z'
+#         }
         
-        try:
-            decryption_password = (
-                data.get('client_secret') or
-                request.headers.get('X-CLIENT-SECRET') or
-                request.headers.get('X-ENCRYPTION-PASSWORD') or
-                "default_password"
-            )
-            encrypted_error = encrypt_data(error_response, decryption_password)
-            return jsonify({'encrypted_response': encrypted_error}), 500
-        except:
-            return jsonify(error_response), 500
+#         try:
+#             decryption_password = (
+#                 data.get('client_secret') or
+#                 request.headers.get('X-CLIENT-SECRET') or
+#                 request.headers.get('X-ENCRYPTION-PASSWORD') or
+#                 "default_password"
+#             )
+#             encrypted_error = encrypt_data(error_response, decryption_password)
+#             return jsonify({'encrypted_response': encrypted_error}), 500
+#         except:
+#             return jsonify(error_response), 500
 
-@service_bp.route('/encrypted_auth_info', methods=['POST'])
-def encrypted_auth_service_info():
-    """
-    Get information about the encrypted authentication service
+# @service_bp.route('/encrypted_auth_info', methods=['POST'])
+# def encrypted_auth_service_info():
+#     """
+#     Get information about the encrypted authentication service
     
-    Request:
-    {
-        "encrypted_data": "base64_encoded_encrypted_payload",
-        "client_secret": "optional_user_specific_secret"
-    }
+#     Request:
+#     {
+#         "encrypted_data": "base64_encoded_encrypted_payload",
+#         "client_secret": "optional_user_specific_secret"
+#     }
     
-    Encrypted Payload Structure:
-    {
-        "request_info": true,
-        "encryption_password": "optional_custom_password"
-    }
-    """
-    try:
-        # Validate API key
-        valid, error = validate_api_key()
-        if not valid:
-            return jsonify({'error': error}), 401
+#     Encrypted Payload Structure:
+#     {
+#         "request_info": true,
+#         "encryption_password": "optional_custom_password"
+#     }
+#     """
+#     try:
+#         # Validate API key
+#         valid, error = validate_api_key()
+#         if not valid:
+#             return jsonify({'error': error}), 401
         
-        data = request.get_json()
-        if not data:
-            return jsonify({'error': 'Request body is required'}), 400
+#         data = request.get_json()
+#         if not data:
+#             return jsonify({'error': 'Request body is required'}), 400
         
-        encrypted_payload = data.get('encrypted_data')
-        if not encrypted_payload:
-            return jsonify({'error': 'Encrypted data is required'}), 400
+#         encrypted_payload = data.get('encrypted_data')
+#         if not encrypted_payload:
+#             return jsonify({'error': 'Encrypted data is required'}), 400
         
-        # Get decryption password
-        decryption_password = (
-            data.get('client_secret') or
-            request.headers.get('X-CLIENT-SECRET') or
-            request.headers.get('X-ENCRYPTION-PASSWORD') or
-            "default_password"
-        )
+#         # Get decryption password
+#         decryption_password = (
+#             data.get('client_secret') or
+#             request.headers.get('X-CLIENT-SECRET') or
+#             request.headers.get('X-ENCRYPTION-PASSWORD') or
+#             "default_password"
+#         )
         
-        # Decrypt the payload
-        try:
-            decrypted_data = decrypt_data(encrypted_payload, decryption_password)
+#         # Decrypt the payload
+#         try:
+#             decrypted_data = decrypt_data(encrypted_payload, decryption_password)
             
-            if isinstance(decrypted_data, str):
-                try:
-                    decrypted_data = json.loads(decrypted_data)
-                except json.JSONDecodeError:
-                    decrypted_data = {'request_info': True}
+#             if isinstance(decrypted_data, str):
+#                 try:
+#                     decrypted_data = json.loads(decrypted_data)
+#                 except json.JSONDecodeError:
+#                     decrypted_data = {'request_info': True}
                     
-        except Exception as e:
-            return jsonify({'error': f'Decryption failed: {str(e)}'}), 400
+#         except Exception as e:
+#             return jsonify({'error': f'Decryption failed: {str(e)}'}), 400
         
-        response_encryption_password = decrypted_data.get('encryption_password', decryption_password)
+#         response_encryption_password = decrypted_data.get('encryption_password', decryption_password)
         
-        # Clean up expired refresh tokens
-        current_time = datetime.utcnow()
-        expired_tokens = [
-            token for token, data in REFRESH_TOKENS.items() 
-            if current_time > data['expires_at']
-        ]
+#         # Clean up expired refresh tokens
+#         current_time = datetime.utcnow()
+#         expired_tokens = [
+#             token for token, data in REFRESH_TOKENS.items() 
+#             if current_time > data['expires_at']
+#         ]
         
-        for token in expired_tokens:
-            del REFRESH_TOKENS[token]
+#         for token in expired_tokens:
+#             del REFRESH_TOKENS[token]
         
-        info_response = {
-            'service': 'Encrypted Pure Authentication API',
-            'version': '1.0.0',
-            'description': 'Encrypted authentication service for external applications with enhanced security',
-            'encryption': {
-                'algorithm': 'AES-256-GCM',
-                'key_derivation': 'PBKDF2-HMAC-SHA256',
-                'iterations': 100000,
-                'encoding': 'Base64'
-            },
-            'features': [
-                'End-to-end encrypted payloads',
-                'JWT access tokens with configurable expiry',
-                'Secure refresh tokens',
-                'Encrypted token verification',
-                'Encrypted token revocation (logout)',
-                'Multiple encryption password sources',
-                'Backward compatible with plain auth'
-            ],
-            'encrypted_endpoints': {
-                'authenticate': {
-                    'url': '/service/encrypted_pure_auth',
-                    'method': 'POST',
-                    'description': 'Authenticate user with encrypted payload'
-                },
-                'refresh': {
-                    'url': '/service/encrypted_refresh_token',
-                    'method': 'POST',
-                    'description': 'Refresh access token with encrypted payload'
-                },
-                'verify': {
-                    'url': '/service/encrypted_verify_token',
-                    'method': 'POST',
-                    'description': 'Verify access token with encrypted payload'
-                },
-                'revoke': {
-                    'url': '/service/encrypted_revoke_token',
-                    'method': 'POST',
-                    'description': 'Revoke refresh token with encrypted payload'
-                },
-                'info': {
-                    'url': '/service/encrypted_auth_info',
-                    'method': 'POST',
-                    'description': 'Get encrypted service information'
-                }
-            },
-            'encryption_password_sources': [
-                'Request body: client_secret field',
-                'Header: X-CLIENT-SECRET',
-                'Header: X-ENCRYPTION-PASSWORD',
-                'Default: default_password'
-            ],
-            'payload_structure': {
-                'request': {
-                    'encrypted_data': 'Base64 encoded encrypted JSON payload',
-                    'client_secret': 'Optional encryption password'
-                },
-                'response': {
-                    'encrypted_response': 'Base64 encoded encrypted JSON response'
-                }
-            },
-            'token_info': {
-                'access_token': {
-                    'type': 'JWT',
-                    'algorithm': 'HS256',
-                    'default_expiry_minutes': 60,
-                    'max_expiry_minutes': 1440,
-                    'min_expiry_minutes': 5
-                },
-                'refresh_token': {
-                    'type': 'Secure random token',
-                    'expiry_days': 30,
-                    'single_use': True
-                }
-            },
-            'security_features': {
-                'encrypted_payloads': 'All request/response data encrypted',
-                'flexible_encryption_passwords': 'Multiple password source options',
-                'secure_token_generation': 'Cryptographically secure tokens',
-                'automatic_cleanup': 'Expired tokens automatically removed'
-            },
-            'stats': {
-                'active_refresh_tokens': len(REFRESH_TOKENS),
-                'server_time': datetime.utcnow().isoformat() + 'Z'
-            },
-            'encryption_info': {
-                'response_encrypted': True,
-                'algorithm': 'AES-256-GCM'
-            }
-        }
+#         info_response = {
+#             'service': 'Encrypted Pure Authentication API',
+#             'version': '1.0.0',
+#             'description': 'Encrypted authentication service for external applications with enhanced security',
+#             'encryption': {
+#                 'algorithm': 'AES-256-GCM',
+#                 'key_derivation': 'PBKDF2-HMAC-SHA256',
+#                 'iterations': 100000,
+#                 'encoding': 'Base64'
+#             },
+#             'features': [
+#                 'End-to-end encrypted payloads',
+#                 'JWT access tokens with configurable expiry',
+#                 'Secure refresh tokens',
+#                 'Encrypted token verification',
+#                 'Encrypted token revocation (logout)',
+#                 'Multiple encryption password sources',
+#                 'Backward compatible with plain auth'
+#             ],
+#             'encrypted_endpoints': {
+#                 'authenticate': {
+#                     'url': '/service/encrypted_pure_auth',
+#                     'method': 'POST',
+#                     'description': 'Authenticate user with encrypted payload'
+#                 },
+#                 'refresh': {
+#                     'url': '/service/encrypted_refresh_token',
+#                     'method': 'POST',
+#                     'description': 'Refresh access token with encrypted payload'
+#                 },
+#                 'verify': {
+#                     'url': '/service/encrypted_verify_token',
+#                     'method': 'POST',
+#                     'description': 'Verify access token with encrypted payload'
+#                 },
+#                 'revoke': {
+#                     'url': '/service/encrypted_revoke_token',
+#                     'method': 'POST',
+#                     'description': 'Revoke refresh token with encrypted payload'
+#                 },
+#                 'info': {
+#                     'url': '/service/encrypted_auth_info',
+#                     'method': 'POST',
+#                     'description': 'Get encrypted service information'
+#                 }
+#             },
+#             'encryption_password_sources': [
+#                 'Request body: client_secret field',
+#                 'Header: X-CLIENT-SECRET',
+#                 'Header: X-ENCRYPTION-PASSWORD',
+#                 'Default: default_password'
+#             ],
+#             'payload_structure': {
+#                 'request': {
+#                     'encrypted_data': 'Base64 encoded encrypted JSON payload',
+#                     'client_secret': 'Optional encryption password'
+#                 },
+#                 'response': {
+#                     'encrypted_response': 'Base64 encoded encrypted JSON response'
+#                 }
+#             },
+#             'token_info': {
+#                 'access_token': {
+#                     'type': 'JWT',
+#                     'algorithm': 'HS256',
+#                     'default_expiry_minutes': 60,
+#                     'max_expiry_minutes': 1440,
+#                     'min_expiry_minutes': 5
+#                 },
+#                 'refresh_token': {
+#                     'type': 'Secure random token',
+#                     'expiry_days': 30,
+#                     'single_use': True
+#                 }
+#             },
+#             'security_features': {
+#                 'encrypted_payloads': 'All request/response data encrypted',
+#                 'flexible_encryption_passwords': 'Multiple password source options',
+#                 'secure_token_generation': 'Cryptographically secure tokens',
+#                 'automatic_cleanup': 'Expired tokens automatically removed'
+#             },
+#             'stats': {
+#                 'active_refresh_tokens': len(REFRESH_TOKENS),
+#                 'server_time': datetime.utcnow().isoformat() + 'Z'
+#             },
+#             'encryption_info': {
+#                 'response_encrypted': True,
+#                 'algorithm': 'AES-256-GCM'
+#             }
+#         }
         
-        # Encrypt the response
-        encrypted_response = encrypt_data(info_response, response_encryption_password)
+#         # Encrypt the response
+#         encrypted_response = encrypt_data(info_response, response_encryption_password)
         
-        return jsonify({
-            'encrypted_response': encrypted_response
-        }), 200
+#         return jsonify({
+#             'encrypted_response': encrypted_response
+#         }), 200
         
-    except Exception as e:
-        return jsonify({'error': f'Failed to get encrypted auth info: {str(e)}'}), 500
+#     except Exception as e:
+#         return jsonify({'error': f'Failed to get encrypted auth info: {str(e)}'}), 500
 
-# ========== ENCRYPTION UTILITY ENDPOINTS ==========
+# # ========== ENCRYPTION UTILITY ENDPOINTS ==========
 
-@service_bp.route('/encrypt_data', methods=['POST'])
-def encrypt_data_endpoint():
-    """
-    Utility endpoint to encrypt data using the same algorithm
+# @service_bp.route('/encrypt_data', methods=['POST'])
+# def encrypt_data_endpoint():
+#     """
+#     Utility endpoint to encrypt data using the same algorithm
     
-    Request:
-    {
-        "data": "data_to_encrypt_or_json_object",
-        "password": "encryption_password",
-        "client_secret": "optional_user_specific_secret"
-    }
+#     Request:
+#     {
+#         "data": "data_to_encrypt_or_json_object",
+#         "password": "encryption_password",
+#         "client_secret": "optional_user_specific_secret"
+#     }
     
-    Headers:
-    - X-API-KEY: Required API key
-    - X-CLIENT-SECRET: Optional encryption password
-    - X-ENCRYPTION-PASSWORD: Optional encryption password
+#     Headers:
+#     - X-API-KEY: Required API key
+#     - X-CLIENT-SECRET: Optional encryption password
+#     - X-ENCRYPTION-PASSWORD: Optional encryption password
     
-    Response:
-    {
-        "encrypted_data": "base64_encoded_encrypted_data",
-        "algorithm": "AES-256-GCM",
-        "success": true
-    }
-    """
-    try:
-        # Validate API key
-        valid, error = validate_api_key()
-        if not valid:
-            return jsonify({'error': error}), 401
+#     Response:
+#     {
+#         "encrypted_data": "base64_encoded_encrypted_data",
+#         "algorithm": "AES-256-GCM",
+#         "success": true
+#     }
+#     """
+#     try:
+#         # Validate API key
+#         valid, error = validate_api_key()
+#         if not valid:
+#             return jsonify({'error': error}), 401
         
-        data = request.get_json()
-        if not data:
-            return jsonify({'error': 'Request body is required'}), 400
+#         data = request.get_json()
+#         if not data:
+#             return jsonify({'error': 'Request body is required'}), 400
         
-        data_to_encrypt = data.get('data')
-        if data_to_encrypt is None:
-            return jsonify({'error': 'Data to encrypt is required'}), 400
+#         data_to_encrypt = data.get('data')
+#         if data_to_encrypt is None:
+#             return jsonify({'error': 'Data to encrypt is required'}), 400
         
-        # Get encryption password from multiple sources
-        encryption_password = (
-            data.get('password') or
-            data.get('client_secret') or
-            request.headers.get('X-CLIENT-SECRET') or
-            request.headers.get('X-ENCRYPTION-PASSWORD') or
-            "default_password"
-        )
+#         # Get encryption password from multiple sources
+#         encryption_password = (
+#             data.get('password') or
+#             data.get('client_secret') or
+#             request.headers.get('X-CLIENT-SECRET') or
+#             request.headers.get('X-ENCRYPTION-PASSWORD') or
+#             "default_password"
+#         )
         
-        # Encrypt the data
-        try:
-            encrypted_data = encrypt_data(data_to_encrypt, encryption_password)
+#         # Encrypt the data
+#         try:
+#             encrypted_data = encrypt_data(data_to_encrypt, encryption_password)
             
-            return jsonify({
-                'encrypted_data': encrypted_data,
-                'algorithm': 'AES-256-GCM',
-                'success': True,
-                'original_data_type': type(data_to_encrypt).__name__,
-                'encrypted_length': len(encrypted_data),
-                'timestamp': datetime.utcnow().isoformat() + 'Z'
-            }), 200
+#             return jsonify({
+#                 'encrypted_data': encrypted_data,
+#                 'algorithm': 'AES-256-GCM',
+#                 'success': True,
+#                 'original_data_type': type(data_to_encrypt).__name__,
+#                 'encrypted_length': len(encrypted_data),
+#                 'timestamp': datetime.utcnow().isoformat() + 'Z'
+#             }), 200
             
-        except Exception as e:
-            return jsonify({
-                'success': False,
-                'error': f'Encryption failed: {str(e)}'
-            }), 400
+#         except Exception as e:
+#             return jsonify({
+#                 'success': False,
+#                 'error': f'Encryption failed: {str(e)}'
+#             }), 400
         
-    except Exception as e:
-        return jsonify({'error': f'Encryption endpoint failed: {str(e)}'}), 500
+#     except Exception as e:
+#         return jsonify({'error': f'Encryption endpoint failed: {str(e)}'}), 500
 
-@service_bp.route('/decrypt_data', methods=['POST'])
-def decrypt_data_endpoint():
-    """
-    Utility endpoint to decrypt data using the same algorithm
+# @service_bp.route('/decrypt_data', methods=['POST'])
+# def decrypt_data_endpoint():
+#     """
+#     Utility endpoint to decrypt data using the same algorithm
     
-    Request:
-    {
-        "encrypted_data": "base64_encoded_encrypted_data",
-        "password": "decryption_password",
-        "client_secret": "optional_user_specific_secret"
-    }
+#     Request:
+#     {
+#         "encrypted_data": "base64_encoded_encrypted_data",
+#         "password": "decryption_password",
+#         "client_secret": "optional_user_specific_secret"
+#     }
     
-    Headers:
-    - X-API-KEY: Required API key
-    - X-CLIENT-SECRET: Optional decryption password
-    - X-ENCRYPTION-PASSWORD: Optional decryption password
+#     Headers:
+#     - X-API-KEY: Required API key
+#     - X-CLIENT-SECRET: Optional decryption password
+#     - X-ENCRYPTION-PASSWORD: Optional decryption password
     
-    Response:
-    {
-        "decrypted_data": "original_data_or_json_object",
-        "algorithm": "AES-256-GCM",
-        "success": true
-    }
-    """
-    try:
-        # Validate API key
-        valid, error = validate_api_key()
-        if not valid:
-            return jsonify({'error': error}), 401
+#     Response:
+#     {
+#         "decrypted_data": "original_data_or_json_object",
+#         "algorithm": "AES-256-GCM",
+#         "success": true
+#     }
+#     """
+#     try:
+#         # Validate API key
+#         valid, error = validate_api_key()
+#         if not valid:
+#             return jsonify({'error': error}), 401
         
-        data = request.get_json()
-        if not data:
-            return jsonify({'error': 'Request body is required'}), 400
+#         data = request.get_json()
+#         if not data:
+#             return jsonify({'error': 'Request body is required'}), 400
         
-        encrypted_payload = data.get('encrypted_data')
-        if not encrypted_payload:
-            return jsonify({'error': 'Encrypted data is required'}), 400
+#         encrypted_payload = data.get('encrypted_data')
+#         if not encrypted_payload:
+#             return jsonify({'error': 'Encrypted data is required'}), 400
         
-        # Get decryption password from multiple sources
-        decryption_password = (
-            data.get('password') or
-            data.get('client_secret') or
-            request.headers.get('X-CLIENT-SECRET') or
-            request.headers.get('X-ENCRYPTION-PASSWORD') or
-            "default_password"
-        )
+#         # Get decryption password from multiple sources
+#         decryption_password = (
+#             data.get('password') or
+#             data.get('client_secret') or
+#             request.headers.get('X-CLIENT-SECRET') or
+#             request.headers.get('X-ENCRYPTION-PASSWORD') or
+#             "default_password"
+#         )
         
-        # Decrypt the data
-        try:
-            decrypted_data = decrypt_data(encrypted_payload, decryption_password)
+#         # Decrypt the data
+#         try:
+#             decrypted_data = decrypt_data(encrypted_payload, decryption_password)
             
-            # Check if decryption failed
-            if isinstance(decrypted_data, str) and decrypted_data.startswith("Decryption failed"):
-                return jsonify({
-                    'success': False,
-                    'error': decrypted_data
-                }), 400
+#             # Check if decryption failed
+#             if isinstance(decrypted_data, str) and decrypted_data.startswith("Decryption failed"):
+#                 return jsonify({
+#                     'success': False,
+#                     'error': decrypted_data
+#                 }), 400
             
-            return jsonify({
-                'decrypted_data': decrypted_data,
-                'algorithm': 'AES-256-GCM',
-                'success': True,
-                'decrypted_data_type': type(decrypted_data).__name__,
-                'timestamp': datetime.utcnow().isoformat() + 'Z'
-            }), 200
+#             return jsonify({
+#                 'decrypted_data': decrypted_data,
+#                 'algorithm': 'AES-256-GCM',
+#                 'success': True,
+#                 'decrypted_data_type': type(decrypted_data).__name__,
+#                 'timestamp': datetime.utcnow().isoformat() + 'Z'
+#             }), 200
             
-        except Exception as e:
-            return jsonify({
-                'success': False,
-                'error': f'Decryption failed: {str(e)}'
-            }), 400
+#         except Exception as e:
+#             return jsonify({
+#                 'success': False,
+#                 'error': f'Decryption failed: {str(e)}'
+#             }), 400
         
-    except Exception as e:
-        return jsonify({'error': f'Decryption endpoint failed: {str(e)}'}), 500
+#     except Exception as e:
+#         return jsonify({'error': f'Decryption endpoint failed: {str(e)}'}), 500
 
-# ========== EXAMPLE USAGE AND TESTING ==========
+# # ========== EXAMPLE USAGE AND TESTING ==========
 
-@service_bp.route('/encrypted_auth_example', methods=['GET'])
-def encrypted_auth_example():
-    """
-    Get example requests and responses for encrypted authentication
+# @service_bp.route('/encrypted_auth_example', methods=['GET'])
+# def encrypted_auth_example():
+#     """
+#     Get example requests and responses for encrypted authentication
     
-    Headers:
-    - X-API-KEY: Required API key
-    """
-    try:
-        # Validate API key
-        valid, error = validate_api_key()
-        if not valid:
-            return jsonify({'error': error}), 401
+#     Headers:
+#     - X-API-KEY: Required API key
+#     """
+#     try:
+#         # Validate API key
+#         valid, error = validate_api_key()
+#         if not valid:
+#             return jsonify({'error': error}), 401
         
-        examples = {
-            'service': 'Encrypted Authentication Examples',
-            'encryption_password_note': 'Use "default_password" for testing or your own secure password',
-            'examples': {
-                'authentication': {
-                    'endpoint': '/service/encrypted_pure_auth',
-                    'method': 'POST',
-                    'description': 'Authenticate user with encrypted credentials',
-                    'headers': {
-                        'X-API-KEY': 'your-api-key',
-                        'X-CLIENT-SECRET': 'your-encryption-password (optional)',
-                        'Content-Type': 'application/json'
-                    },
-                    'request_body': {
-                        'encrypted_data': 'base64_encoded_encrypted_payload',
-                        'client_secret': 'optional_encryption_password'
-                    },
-                    'encrypted_payload_structure': {
-                        'email': 'user@domain.com',
-                        'password': 'userpassword',
-                        'token_expiry_minutes': 60,
-                        'encryption_password': 'response_encryption_password'
-                    },
-                    'sample_payload_to_encrypt': {
-                        'email': 'test@example.com',
-                        'password': 'testpassword123',
-                        'token_expiry_minutes': 120
-                    }
-                },
-                'token_refresh': {
-                    'endpoint': '/service/encrypted_refresh_token',
-                    'method': 'POST',
-                    'description': 'Refresh access token with encrypted refresh token',
-                    'encrypted_payload_structure': {
-                        'refresh_token': 'your_refresh_token_here',
-                        'token_expiry_minutes': 60,
-                        'encryption_password': 'response_encryption_password'
-                    }
-                },
-                'token_verification': {
-                    'endpoint': '/service/encrypted_verify_token',
-                    'method': 'POST',
-                    'description': 'Verify access token with encrypted payload',
-                    'encrypted_payload_structure': {
-                        'access_token': 'your_jwt_access_token_here',
-                        'encryption_password': 'response_encryption_password'
-                    }
-                },
-                'token_revocation': {
-                    'endpoint': '/service/encrypted_revoke_token',
-                    'method': 'POST',
-                    'description': 'Revoke refresh token with encrypted payload',
-                    'encrypted_payload_structure': {
-                        'refresh_token': 'refresh_token_to_revoke',
-                        'encryption_password': 'response_encryption_password'
-                    }
-                }
-            },
-            'utility_endpoints': {
-                'encrypt_data': {
-                    'endpoint': '/service/encrypt_data',
-                    'method': 'POST',
-                    'description': 'Encrypt any data using the same algorithm',
-                    'request_body': {
-                        'data': 'data_to_encrypt_or_json_object',
-                        'password': 'encryption_password'
-                    }
-                },
-                'decrypt_data': {
-                    'endpoint': '/service/decrypt_data',
-                    'method': 'POST',
-                    'description': 'Decrypt data using the same algorithm',
-                    'request_body': {
-                        'encrypted_data': 'base64_encoded_encrypted_data',
-                        'password': 'decryption_password'
-                    }
-                }
-            },
-            'workflow': [
-                '1. Use /service/encrypt_data to encrypt your authentication payload',
-                '2. Send encrypted payload to /service/encrypted_pure_auth',
-                '3. Receive encrypted response with access_token and refresh_token',
-                '4. Use /service/decrypt_data to decrypt the response',
-                '5. Use access_token for API calls, refresh_token for token renewal',
-                '6. Use encrypted endpoints for secure token operations'
-            ],
-            'security_tips': [
-                'Use unique passwords for different users/applications',
-                'Store encryption passwords securely',
-                'Use client secrets from headers when possible',
-                'Always validate decrypted responses',
-                'Implement proper error handling for decryption failures'
-            ],
-            'integration_steps': {
-                'step1': 'Generate or obtain API key',
-                'step2': 'Choose encryption password (user-specific recommended)',
-                'step3': 'Encrypt authentication payload using /service/encrypt_data',
-                'step4': 'Send encrypted request to authentication endpoint',
-                'step5': 'Decrypt response to get tokens',
-                'step6': 'Use tokens for subsequent encrypted API calls'
-            }
-        }
+#         examples = {
+#             'service': 'Encrypted Authentication Examples',
+#             'encryption_password_note': 'Use "default_password" for testing or your own secure password',
+#             'examples': {
+#                 'authentication': {
+#                     'endpoint': '/service/encrypted_pure_auth',
+#                     'method': 'POST',
+#                     'description': 'Authenticate user with encrypted credentials',
+#                     'headers': {
+#                         'X-API-KEY': 'your-api-key',
+#                         'X-CLIENT-SECRET': 'your-encryption-password (optional)',
+#                         'Content-Type': 'application/json'
+#                     },
+#                     'request_body': {
+#                         'encrypted_data': 'base64_encoded_encrypted_payload',
+#                         'client_secret': 'optional_encryption_password'
+#                     },
+#                     'encrypted_payload_structure': {
+#                         'email': 'user@domain.com',
+#                         'password': 'userpassword',
+#                         'token_expiry_minutes': 60,
+#                         'encryption_password': 'response_encryption_password'
+#                     },
+#                     'sample_payload_to_encrypt': {
+#                         'email': 'test@example.com',
+#                         'password': 'testpassword123',
+#                         'token_expiry_minutes': 120
+#                     }
+#                 },
+#                 'token_refresh': {
+#                     'endpoint': '/service/encrypted_refresh_token',
+#                     'method': 'POST',
+#                     'description': 'Refresh access token with encrypted refresh token',
+#                     'encrypted_payload_structure': {
+#                         'refresh_token': 'your_refresh_token_here',
+#                         'token_expiry_minutes': 60,
+#                         'encryption_password': 'response_encryption_password'
+#                     }
+#                 },
+#                 'token_verification': {
+#                     'endpoint': '/service/encrypted_verify_token',
+#                     'method': 'POST',
+#                     'description': 'Verify access token with encrypted payload',
+#                     'encrypted_payload_structure': {
+#                         'access_token': 'your_jwt_access_token_here',
+#                         'encryption_password': 'response_encryption_password'
+#                     }
+#                 },
+#                 'token_revocation': {
+#                     'endpoint': '/service/encrypted_revoke_token',
+#                     'method': 'POST',
+#                     'description': 'Revoke refresh token with encrypted payload',
+#                     'encrypted_payload_structure': {
+#                         'refresh_token': 'refresh_token_to_revoke',
+#                         'encryption_password': 'response_encryption_password'
+#                     }
+#                 }
+#             },
+#             'utility_endpoints': {
+#                 'encrypt_data': {
+#                     'endpoint': '/service/encrypt_data',
+#                     'method': 'POST',
+#                     'description': 'Encrypt any data using the same algorithm',
+#                     'request_body': {
+#                         'data': 'data_to_encrypt_or_json_object',
+#                         'password': 'encryption_password'
+#                     }
+#                 },
+#                 'decrypt_data': {
+#                     'endpoint': '/service/decrypt_data',
+#                     'method': 'POST',
+#                     'description': 'Decrypt data using the same algorithm',
+#                     'request_body': {
+#                         'encrypted_data': 'base64_encoded_encrypted_data',
+#                         'password': 'decryption_password'
+#                     }
+#                 }
+#             },
+#             'workflow': [
+#                 '1. Use /service/encrypt_data to encrypt your authentication payload',
+#                 '2. Send encrypted payload to /service/encrypted_pure_auth',
+#                 '3. Receive encrypted response with access_token and refresh_token',
+#                 '4. Use /service/decrypt_data to decrypt the response',
+#                 '5. Use access_token for API calls, refresh_token for token renewal',
+#                 '6. Use encrypted endpoints for secure token operations'
+#             ],
+#             'security_tips': [
+#                 'Use unique passwords for different users/applications',
+#                 'Store encryption passwords securely',
+#                 'Use client secrets from headers when possible',
+#                 'Always validate decrypted responses',
+#                 'Implement proper error handling for decryption failures'
+#             ],
+#             'integration_steps': {
+#                 'step1': 'Generate or obtain API key',
+#                 'step2': 'Choose encryption password (user-specific recommended)',
+#                 'step3': 'Encrypt authentication payload using /service/encrypt_data',
+#                 'step4': 'Send encrypted request to authentication endpoint',
+#                 'step5': 'Decrypt response to get tokens',
+#                 'step6': 'Use tokens for subsequent encrypted API calls'
+#             }
+#         }
         
-        return jsonify(examples), 200
+#         return jsonify(examples), 200
         
-    except Exception as e:
-        return jsonify({'error': f'Failed to get examples: {str(e)}'}), 500
+#     except Exception as e:
+#         return jsonify({'error': f'Failed to get examples: {str(e)}'}), 500

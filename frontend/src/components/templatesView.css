@@ -1,0 +1,157 @@
+.templates-view {
+  padding: var(--space-6);
+  min-height: 100%;
+}
+
+.templates-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-8);
+  padding: var(--space-6);
+  background: #d6eefe; /* light pastel blue */
+  border-radius: var(--radius-xl);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  border: 1px solid #b5dbf9;
+}
+
+.templates-header h2 {
+  font-size: 1.875rem;
+  font-weight: 700;
+  margin: 0;
+  color: #234b63; /* deep slate blue text */
+}
+
+.templates-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: var(--space-6);
+}
+
+.template-card {
+  background: #f0f8ff; /* light azure */
+  border-radius: var(--radius-xl);
+  padding: var(--space-6);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  transition: all 0.3s ease;
+  border: 1px solid #cce7f5;
+  position: relative;
+  overflow: hidden;
+}
+
+.template-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #64b5f6, #4fc3f7);
+  transform: scaleX(0);
+  transition: transform 0.3s ease;
+}
+
+.template-card:hover::before {
+  transform: scaleX(1);
+}
+
+.template-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+  border-color: #90caf9;
+}
+
+.template-card h3 {
+  font-size: 1.125rem;
+  margin-bottom: var(--space-3);
+  color: #1e3a5f;
+  font-weight: 600;
+}
+
+.empty-state h3 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #1565c0; /* Light/dark blue depending on your theme */
+}
+
+.template-card p {
+  font-size: 0.875rem;
+  color: #1368b6;
+  margin-bottom: var(--space-4);
+  line-height: 1.5;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.template-actions {
+  display: flex;
+  gap: var(--space-2);
+}
+
+/* Optional: if you have buttons, you can style them too */
+.template-actions button {
+  background-color: #bbdefb;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 8px;
+  color: #0d47a1;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background-color 0.2s ease;
+}
+
+.template-actions button:hover {
+  background-color: #90caf9;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 0.875rem;
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.2s ease, box-shadow 0.2s ease;
+  text-decoration: none;
+}
+
+/* Primary Light Blue Button */
+.btn-primary {
+  background-color: #bbdefb; /* light blue */
+  color: #0d47a1; /* dark blue text */
+}
+
+.btn-primary:hover {
+  background-color: #90caf9; /* slightly darker on hover */
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+/* Small size */
+.btn-sm {
+  padding: 6px 12px;
+  font-size: 0.75rem;
+}
+
+.templates-header.dark {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-8);
+  padding: var(--space-6);
+  background: #0d1b2a; /* deep navy */
+  border: 1px solid #0d1b2a;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  /* border: 1px solid #424242; */
+}
+
+.templates-header.dark h2 {
+  font-size: 1.875rem;
+  font-weight: 700;
+  margin: 0;
+  color: #c6c6c8; /* deep slate blue text */
+}

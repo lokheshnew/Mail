@@ -1,0 +1,28 @@
+.theme-toggle {
+  width: auto;
+  height: auto;
+  border-radius: 0;
+  background-color: transparent !important;
+  box-shadow: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.icon-wrapper {
+  font-size: 1.2rem;
+  color: var(--text-primary);
+  transition: transform 0.4s ease;
+  background: none !important;
+  background-color: transparent !important;
+  border: none !important;
+}
+
+.icon-wrapper.dark {
+  transform: rotate(180deg);
+}
+.theme-toggle:hover .icon-wrapper {
+  transform: scale(1.1);
+}

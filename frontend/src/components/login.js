@@ -112,9 +112,6 @@ function Login() {
     <div className="auth-layout">
       <div className="auth-container">
         <div className="auth-header">
-          <div className="auth-logo">
-            📧
-          </div>
           <h2 className="auth-title">Welcome Back</h2>
           <p className="auth-subtitle">Sign in to your account to continue</p>
         </div>
@@ -168,7 +165,7 @@ function Login() {
           </form>
 
           {message && (
-            <div className={`message ${message.includes('❌') ? 'error' : ''}`}>
+            <div className={`message ${message.includes("❌") ? "error" : ""}`}>
               {message}
             </div>
           )}

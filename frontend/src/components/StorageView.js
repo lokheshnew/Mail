@@ -7,10 +7,14 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
+import { CircularProgressbar, buildStyles } from "react-circular-progressbar";
+import "react-circular-progressbar/dist/styles.css";
+import "./storage.css";
 
-const COLORS = ["#4285F4", "#34A853", "#FBBC05", "#EA4335", "#9C27B0"];
+// Soft and elegant colors that suit both dark and light themes
+const COLORS = ["#4FC3F7", "#81C784", "#FFD54F", "#E57373", "#BA68C8"];
 
-const StorageView = ({ storageInfo, emailStats }) => {
+const StorageView = ({ storageInfo, emailStats, isDarkMode }) => {
   const chartData = [
     { name: "Received", value: emailStats?.total_received || 0 },
     { name: "Sent", value: emailStats?.total_sent || 0 },
@@ -20,36 +24,55 @@ const StorageView = ({ storageInfo, emailStats }) => {
   ];
 
   return (
-    <div className="storage-view">
+    <div className={`storage-view ${isDarkMode ? "dark" : ""}`}>
       <div className="storage-card animate-fadeIn">
         <h2>Storage Usage</h2>
         {storageInfo && (
-          <div className="storage-info">
-            <div className="storage-bar">
+          <div className="circular-storage-container">
+            <div className="circular-progress-wrapper">
+              <CircularProgressbar
+                value={storageInfo.percentage}
+                text={`${storageInfo.percentage}%`}
+                styles={buildStyles({
+                  textSize: "16px",
+                  pathColor:
+                    storageInfo.status === "ok"
+                      ? "#4CAF50"
+                      : storageInfo.status === "warning"
+                      ? "#FFC107"
+                      : "#F44336",
+                  textColor: "#38d8c8ff",
+                  trailColor: "#e0e0e0",
+                })}
+              />
+            </div>
+            <div className="storage-details-enhanced">
+              <div className="storage-label">
+                <strong>Used:</strong> {storageInfo.used_mb} MB
+              </div>
               <div
-                className="storage-fill"
-                style={{ width: `${storageInfo.percentage}%` }}
-              ></div>
-            </div>
-            <div className="storage-details">
-              <span className="storage-used">
-                📁 {storageInfo.used_mb} MB used
-              </span>
-              <span className={`badge badge-${storageInfo.status === 'ok' ? 'success' : storageInfo.status === 'warning' ? 'warning' : 'error'}`}>
+                className={`status-tag ${
+                  storageInfo.status === "ok"
+                    ? "ok"
+                    : storageInfo.status === "warning"
+                    ? "warning"
+                    : "error"
+                }`}
+              >
                 {storageInfo.status.toUpperCase()}
-              </span>
-            </div>
-            <div className="storage-percentage">
-              {storageInfo.percentage}%
+              </div>
             </div>
           </div>
         )}
       </div>
 
       {emailStats && (
-        <div className="stats-card animate-fadeIn" style={{ animationDelay: '0.2s' }}>
+        <div
+          className="stats-card animate-fadeIn"
+          style={{ animationDelay: "0.2s" }}
+        >
           <h2>Email Statistics</h2>
-          <ResponsiveContainer width="100%" height={300}>
+          <ResponsiveContainer width="100%" height={400}>
             <PieChart>
               <Pie
                 data={chartData}
@@ -57,9 +80,11 @@ const StorageView = ({ storageInfo, emailStats }) => {
                 cy="50%"
                 labelLine={false}
                 label={({ name, percent }) =>
-                  `${name}: ${(percent * 100).toFixed(0)}%`
+                  percent > 0.01
+                    ? `${name}: ${(percent * 100).toFixed(0)}%`
+                    : ""
                 }
-                outerRadius={100}
+                outerRadius={120}
                 fill="#8884d8"
                 dataKey="value"
               >
@@ -71,7 +96,7 @@ const StorageView = ({ storageInfo, emailStats }) => {
                 ))}
               </Pie>
               <Tooltip />
-              <Legend />
+              <Legend verticalAlign="bottom" />
             </PieChart>
           </ResponsiveContainer>
         </div>

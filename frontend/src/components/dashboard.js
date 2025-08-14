@@ -35,6 +35,7 @@ const Dashboard = () => {
   const [confirmMessage, setConfirmMessage] = useState("");
   const [onConfirm, setOnConfirm] = useState(null);
   const [editingDraft, setEditingDraft] = useState(null);
+  const [isDarkMode, setIsDarkMode] = useState(false);
 
   const username = localStorage.getItem("username");
   const email = localStorage.getItem("email");
@@ -46,9 +47,9 @@ const Dashboard = () => {
       // ✅ CORRECT ENDPOINT - Using /mail/inbox
       const res = await fetch(`${API_BASE_URL}/mail/inbox/${email}`, {
         headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
       });
       const data = await res.json();
       if (data.inbox) {
@@ -68,9 +69,9 @@ const Dashboard = () => {
       // ✅ CORRECT ENDPOINT - Using /mail/sent
       const res = await fetch(`${API_BASE_URL}/mail/sent/${email}`, {
         headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
       });
       const data = await res.json();
       if (data.sent) {
@@ -90,9 +91,9 @@ const Dashboard = () => {
       // ✅ CORRECT ENDPOINT - Using /mail/drafts
       const res = await fetch(`${API_BASE_URL}/mail/drafts/${email}`, {
         headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
       });
       const data = await res.json();
       if (data.drafts) {
@@ -109,9 +110,9 @@ const Dashboard = () => {
       // ✅ CORRECT ENDPOINT - Using /mail/trash
       const res = await fetch(`${API_BASE_URL}/mail/trash/${email}`, {
         headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
       });
       const data = await res.json();
       if (data.trash) {
@@ -128,9 +129,9 @@ const Dashboard = () => {
       // ✅ CORRECT ENDPOINT - Using /template/templates
       const res = await fetch(`${API_BASE_URL}/template/templates/${email}`, {
         headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
       });
       const data = await res.json();
       if (data.templates) {
@@ -147,9 +148,9 @@ const Dashboard = () => {
       // ✅ CORRECT ENDPOINT - Using /mail/storage
       const res = await fetch(`${API_BASE_URL}/mail/storage/${email}`, {
         headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
       });
       const data = await res.json();
       setStorageInfo(data);
@@ -164,9 +165,9 @@ const Dashboard = () => {
       // ✅ CORRECT ENDPOINT - Using /mail/stats
       const res = await fetch(`${API_BASE_URL}/mail/stats/${email}`, {
         headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
       });
       const data = await res.json();
       setEmailStats(data);
@@ -183,7 +184,7 @@ const Dashboard = () => {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          'Authorization': `Bearer ${token}`
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({}),
       });
@@ -218,9 +219,9 @@ const Dashboard = () => {
       // ✅ CORRECT ENDPOINT - Using /mail/search
       const res = await fetch(`${API_BASE_URL}/mail/search`, {
         method: "POST",
-        headers: { 
+        headers: {
           "Content-Type": "application/json",
-          'Authorization': `Bearer ${token}`
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           query: searchQuery,
@@ -244,7 +245,7 @@ const Dashboard = () => {
     if (searchQuery.trim() && searchResults.length > 0) {
       return searchResults;
     }
-    
+
     switch (activeTab) {
       case "inbox":
         return inbox;
@@ -287,19 +288,21 @@ const Dashboard = () => {
     // ✅ CORRECT ENDPOINT - Using /auth/logout
     fetch(`${API_BASE_URL}/auth/logout`, {
       method: "POST",
-      headers: { 
+      headers: {
         "Content-Type": "application/json",
-        'Authorization': `Bearer ${token}`
+        Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify({}),
-    }).then(() => {
-      localStorage.clear();
-      window.location.href = "/";
-    }).catch(() => {
-      // Even if logout fails, clear local storage and redirect
-      localStorage.clear();
-      window.location.href = "/";
-    });
+    })
+      .then(() => {
+        localStorage.clear();
+        window.location.href = "/";
+      })
+      .catch(() => {
+        // Even if logout fails, clear local storage and redirect
+        localStorage.clear();
+        window.location.href = "/";
+      });
   };
 
   const handleClearSearch = () => {
@@ -312,7 +315,7 @@ const Dashboard = () => {
     setActiveTab(tab);
     setSelectedEmail(null);
     handleClearSearch();
-    
+
     switch (tab) {
       case "inbox":
         fetchInbox();
@@ -373,7 +376,14 @@ const Dashboard = () => {
   const renderMainContent = () => {
     switch (activeTab) {
       case "storage":
-        return <StorageView storageInfo={storageInfo} emailStats={emailStats} />;
+        return (
+          <StorageView
+            storageInfo={storageInfo}
+            emailStats={emailStats}
+            isDarkMode={isDarkMode}
+            toggleDarkMode={toggleDarkMode}
+          />
+        );
       case "templates":
         return (
           <TemplatesView
@@ -383,6 +393,8 @@ const Dashboard = () => {
               // This would be passed to compose modal
               setShowCompose(true);
             }}
+            isDarkMode={isDarkMode}
+            toggleDarkMode={toggleDarkMode}
           />
         );
       default:
@@ -408,19 +420,27 @@ const Dashboard = () => {
             fetchTrash={fetchTrash}
             fetchInbox={fetchInbox}
             fetchSent={fetchSent}
+            isDarkMode={isDarkMode}
+            toggleDarkMode={toggleDarkMode}
           />
         );
     }
   };
 
+  const toggleDarkMode = () => {
+    setIsDarkMode((prev) => !prev);
+  };
+
   return (
-    <div className="gmail-dashboard">
+    <div className={`gmail-dashboard ${isDarkMode ? "dark" : ""}`}>
       <Header
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
         onClearSearch={handleClearSearch}
         username={username}
         onLogout={handleLogout}
+        isDarkMode={isDarkMode}
+        toggleDarkMode={toggleDarkMode}
       />
 
       <div className="gmail-body">
@@ -436,45 +456,47 @@ const Dashboard = () => {
             scheduled: scheduled.length,
             trash: trash.length,
           }}
+          isDarkMode={isDarkMode}
         />
 
-        <main className="gmail-main">
-          {renderMainContent()}
-        </main>
-      
+        <main className="gmail-main">{renderMainContent()}</main>
 
-      {showCompose && (
-        <ComposeModal
-          onClose={() => {
-            setShowCompose(false);
-            setEditingDraft(null);
-          }}
-          onSent={() => {
-            fetchSent();
-            refreshCurrentFolder();
-          }}
-          onDraftSaved={() => {
-            fetchDrafts();
-          }}
-          onScheduled={() => {
-            fetchScheduled();
-          }}
-          templates={templates}
-          editingDraft={editingDraft}
-          token={token}
-        />
-      )}
+        {showCompose && (
+          <ComposeModal
+            onClose={() => {
+              setShowCompose(false);
+              setEditingDraft(null);
+            }}
+            onSent={() => {
+              fetchSent();
+              refreshCurrentFolder();
+            }}
+            onDraftSaved={() => {
+              fetchDrafts();
+            }}
+            onScheduled={() => {
+              fetchScheduled();
+            }}
+            templates={templates}
+            editingDraft={editingDraft}
+            token={token}
+            isDarkMode={isDarkMode}
+            toggleDarkMode={toggleDarkMode}
+          />
+        )}
 
-      {showTemplateModal && (
-        <TemplateModal
-          onClose={() => setShowTemplateModal(false)}
-          onSaved={() => {
-            fetchTemplates();
-            setShowTemplateModal(false);
-          }}
-          token={token}
-        />
-      )}
+        {showTemplateModal && (
+          <TemplateModal
+            onClose={() => setShowTemplateModal(false)}
+            onSaved={() => {
+              fetchTemplates();
+              setShowTemplateModal(false);
+            }}
+            token={token}
+            isDarkMode={isDarkMode}
+            toggleDarkMode={toggleDarkMode}
+          />
+        )}
       </div>
 
       {showConfirmModal && (
@@ -485,6 +507,8 @@ const Dashboard = () => {
             setShowConfirmModal(false);
           }}
           onCancel={() => setShowConfirmModal(false)}
+          isDarkMode={isDarkMode}
+          toggleDarkMode={toggleDarkMode}
         />
       )}
     </div>
