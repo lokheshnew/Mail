@@ -480,6 +480,8 @@ const Dashboard = () => {
             templates={templates}
             editingDraft={editingDraft}
             token={token}
+            isDarkMode={isDarkMode}
+            toggleDarkMode={toggleDarkMode}
           />
         )}
 
@@ -491,6 +493,8 @@ const Dashboard = () => {
               setShowTemplateModal(false);
             }}
             token={token}
+            isDarkMode={isDarkMode}
+            toggleDarkMode={toggleDarkMode}
           />
         )}
       </div>
@@ -503,6 +507,8 @@ const Dashboard = () => {
             setShowConfirmModal(false);
           }}
           onCancel={() => setShowConfirmModal(false)}
+          isDarkMode={isDarkMode}
+          toggleDarkMode={toggleDarkMode}
         />
       )}
     </div>

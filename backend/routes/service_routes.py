@@ -1,5 +1,3 @@
-# routes/service_routes.py - Fixed syntax error around line 491
-
 from flask import Blueprint, request, jsonify
 from models.user import load_users, is_supported_email, authenticate_user, get_client_secret
 from models.company import get_company_by_domain
@@ -7,12 +5,13 @@ from utils.auth import verify_token, generate_token
 from services.mail_service import MailService
 from utils.encryption import EncryptionService
 from config import API_KEY
-from datetime import datetime
+from datetime import datetime,timedelta
 import re
 import json
-
+import jwt
+import secrets
 service_bp = Blueprint('service', __name__)
-
+REFRESH_TOKENS = {}
 # Initialize encryption service
 encryption_service = EncryptionService()
 
@@ -575,3 +574,541 @@ def api_documentation():
     }
     
     return jsonify(docs), 200
+
+def generate_access_token(user_data, expires_in_minutes=60):
+    """Generate JWT access token with expiration"""
+    try:
+        payload = {
+            'user_id': user_data.get('user_id'),
+            'email': user_data.get('email'),
+            'username': user_data.get('username'),
+            'token_type': 'access',
+            'exp': datetime.utcnow() + timedelta(minutes=expires_in_minutes),
+            'iat': datetime.utcnow(),
+            'nbf': datetime.utcnow()  # Not valid before
+        }
+        
+        # Use the same secret key as existing auth system
+        from utils.auth import SECRET_KEY
+        token = jwt.encode(payload, SECRET_KEY, algorithm='HS256')
+        return token
+        
+    except Exception as e:
+        print(f"Error generating access token: {e}")
+        return None
+
+def generate_refresh_token(user_email):
+    """Generate secure refresh token"""
+    refresh_token = secrets.token_urlsafe(64)
+    
+    # Store refresh token with expiration (30 days)
+    REFRESH_TOKENS[refresh_token] = {
+        'email': user_email,
+        'created_at': datetime.utcnow(),
+        'expires_at': datetime.utcnow() + timedelta(days=30),
+        'used': False
+    }
+    
+    return refresh_token
+
+def validate_refresh_token(refresh_token):
+    """Validate refresh token"""
+    if refresh_token not in REFRESH_TOKENS:
+        return None, "Invalid refresh token"
+    
+    token_data = REFRESH_TOKENS[refresh_token]
+    
+    if token_data['used']:
+        return None, "Refresh token already used"
+    
+    if datetime.utcnow() > token_data['expires_at']:
+        # Clean up expired token
+        del REFRESH_TOKENS[refresh_token]
+        return None, "Refresh token expired"
+    
+    return token_data, None
+
+def revoke_refresh_token(refresh_token):
+    """Revoke a refresh token"""
+    if refresh_token in REFRESH_TOKENS:
+        del REFRESH_TOKENS[refresh_token]
+        return True
+    return False
+
+@service_bp.route('/pure_auth', methods=['POST'])
+def pure_authentication():
+    print("arrives")
+    """
+    Pure authentication API - only validates credentials and returns tokens
+    
+    Request:
+    {
+        "email": "user@domain.com",
+        "password": "userpassword",
+        "token_expiry_minutes": 60  // optional, default 60 minutes
+    }
+    
+    Headers:
+    - X-API-KEY: Required API key
+    
+    Response:
+    {
+        "authenticated": true,
+        "access_token": "jwt_token_here",
+        "refresh_token": "secure_refresh_token",
+        "token_type": "Bearer",
+        "expires_in": 3600,
+        "expires_at": "2025-08-13T15:30:00Z",
+        "user_info": {
+            "user_id": "user123",
+            "email": "user@domain.com",
+            "username": "John Doe"
+        }
+    }
+    """
+    try:
+        # Validate API key
+        valid, error = validate_api_key()
+        if not valid:
+            return jsonify({'error': error}), 401
+        
+        data = request.get_json()
+        if not data:
+            return jsonify({'error': 'Request body is required'}), 400
+        
+        email = data.get('email', '').strip().lower()
+        password = data.get('password', '')
+        token_expiry_minutes = data.get('token_expiry_minutes', 60)
+        
+        # Validate input
+        if not all([email, password]):
+            return jsonify({
+                'authenticated': False,
+                'error': 'Email and password are required'
+            }), 400
+        
+        # Validate token expiry (max 24 hours)
+        if not isinstance(token_expiry_minutes, int) or token_expiry_minutes < 5 or token_expiry_minutes > 1440:
+            return jsonify({
+                'authenticated': False,
+                'error': 'Token expiry must be between 5 and 1440 minutes'
+            }), 400
+        
+        # Authenticate user using existing system
+        user, error = authenticate_user(email, password)
+        
+        if error:
+            return jsonify({
+                'authenticated': False,
+                'error': error,
+                'timestamp': datetime.utcnow().isoformat() + 'Z'
+            }), 401
+        
+        # Generate access token
+        access_token = generate_access_token(user, token_expiry_minutes)
+        
+        if not access_token:
+            return jsonify({
+                'authenticated': False,
+                'error': 'Failed to generate access token'
+            }), 500
+        
+        # Generate refresh token
+        refresh_token = generate_refresh_token(email)
+        
+        # Calculate expiry time
+        expires_at = datetime.utcnow() + timedelta(minutes=token_expiry_minutes)
+        expires_in_seconds = token_expiry_minutes * 60
+        
+        return jsonify({
+            'authenticated': True,
+            'access_token': access_token,
+            'refresh_token': refresh_token,
+            'token_type': 'Bearer',
+            'expires_in': expires_in_seconds,
+            'expires_at': expires_at.isoformat() + 'Z',
+            'user_info': {
+                'user_id': user.get('user_id'),
+                'email': user.get('email'),
+                'username': user.get('username')
+            },
+            'timestamp': datetime.utcnow().isoformat() + 'Z'
+        }), 200
+        
+    except Exception as e:
+        return jsonify({
+            'authenticated': False,
+            'error': f'Authentication failed: {str(e)}',
+            'timestamp': datetime.utcnow().isoformat() + 'Z'
+        }), 500
+
+@service_bp.route('/refresh_token', methods=['POST'])
+def refresh_access_token():
+    """
+    Refresh access token using refresh token
+    
+    Request:
+    {
+        "refresh_token": "secure_refresh_token_here",
+        "token_expiry_minutes": 60  // optional, default 60 minutes
+    }
+    
+    Headers:
+    - X-API-KEY: Required API key
+    
+    Response:
+    {
+        "success": true,
+        "access_token": "new_jwt_token_here",
+        "refresh_token": "new_refresh_token",
+        "token_type": "Bearer",
+        "expires_in": 3600,
+        "expires_at": "2025-08-13T16:30:00Z"
+    }
+    """
+    try:
+        # Validate API key
+        valid, error = validate_api_key()
+        if not valid:
+            return jsonify({'error': error}), 401
+        
+        data = request.get_json()
+        if not data:
+            return jsonify({'error': 'Request body is required'}), 400
+        
+        refresh_token = data.get('refresh_token', '')
+        token_expiry_minutes = data.get('token_expiry_minutes', 60)
+        
+        if not refresh_token:
+            return jsonify({
+                'success': False,
+                'error': 'Refresh token is required'
+            }), 400
+        
+        # Validate token expiry
+        if not isinstance(token_expiry_minutes, int) or token_expiry_minutes < 5 or token_expiry_minutes > 1440:
+            return jsonify({
+                'success': False,
+                'error': 'Token expiry must be between 5 and 1440 minutes'
+            }), 400
+        
+        # Validate refresh token
+        token_data, error = validate_refresh_token(refresh_token)
+        
+        if error:
+            return jsonify({
+                'success': False,
+                'error': error
+            }), 401
+        
+        user_email = token_data['email']
+        
+        # Get user data for new token
+        users = load_users()
+        if user_email not in users:
+            return jsonify({
+                'success': False,
+                'error': 'User not found'
+            }), 404
+        
+        user_data = users[user_email]
+        
+        # Check if user is still active
+        if user_data.get('status') != 'active':
+            return jsonify({
+                'success': False,
+                'error': 'User account is inactive'
+            }), 403
+        
+        # Mark old refresh token as used
+        REFRESH_TOKENS[refresh_token]['used'] = True
+        
+        # Generate new tokens
+        new_access_token = generate_access_token(user_data, token_expiry_minutes)
+        new_refresh_token = generate_refresh_token(user_email)
+        
+        if not new_access_token:
+            return jsonify({
+                'success': False,
+                'error': 'Failed to generate new access token'
+            }), 500
+        
+        # Calculate expiry time
+        expires_at = datetime.utcnow() + timedelta(minutes=token_expiry_minutes)
+        expires_in_seconds = token_expiry_minutes * 60
+        
+        # Clean up old refresh token
+        del REFRESH_TOKENS[refresh_token]
+        
+        return jsonify({
+            'success': True,
+            'access_token': new_access_token,
+            'refresh_token': new_refresh_token,
+            'token_type': 'Bearer',
+            'expires_in': expires_in_seconds,
+            'expires_at': expires_at.isoformat() + 'Z',
+            'user_info': {
+                'user_id': user_data.get('user_id'),
+                'email': user_data.get('email'),
+                'username': user_data.get('username')
+            },
+            'timestamp': datetime.utcnow().isoformat() + 'Z'
+        }), 200
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': f'Token refresh failed: {str(e)}',
+            'timestamp': datetime.utcnow().isoformat() + 'Z'
+        }), 500
+
+@service_bp.route('/verify_token', methods=['POST'])
+def verify_access_token():
+    """
+    Verify if an access token is valid
+    
+    Request:
+    {
+        "access_token": "jwt_token_here"
+    }
+    
+    OR send token in Authorization header: Bearer jwt_token_here
+    
+    Headers:
+    - X-API-KEY: Required API key
+    - Authorization: Bearer jwt_token_here (optional, can use request body instead)
+    
+    Response:
+    {
+        "valid": true,
+        "user_info": {
+            "user_id": "user123",
+            "email": "user@domain.com",
+            "username": "John Doe"
+        },
+        "expires_at": "2025-08-13T15:30:00Z",
+        "time_remaining_seconds": 1800
+    }
+    """
+    try:
+        # Validate API key
+        valid, error = validate_api_key()
+        if not valid:
+            return jsonify({'error': error}), 401
+        
+        # Get token from header or body
+        auth_header = request.headers.get('Authorization')
+        access_token = None
+        
+        if auth_header and auth_header.startswith('Bearer '):
+            access_token = auth_header.split(' ')[1]
+        else:
+            data = request.get_json()
+            if data:
+                access_token = data.get('access_token')
+        
+        if not access_token:
+            return jsonify({
+                'valid': False,
+                'error': 'Access token is required (in body or Authorization header)'
+            }), 400
+        
+        # Verify token using existing system
+        from utils.auth import verify_token, SECRET_KEY
+        
+        try:
+            # Use PyJWT directly for more detailed error handling
+            payload = jwt.decode(access_token, SECRET_KEY, algorithms=['HS256'])
+            
+            # Check token type
+            if payload.get('token_type') != 'access':
+                return jsonify({
+                    'valid': False,
+                    'error': 'Invalid token type'
+                }), 400
+            
+            # Calculate time remaining
+            exp = payload.get('exp')
+            time_remaining = exp - datetime.utcnow().timestamp() if exp else 0
+            
+            return jsonify({
+                'valid': True,
+                'user_info': {
+                    'user_id': payload.get('user_id'),
+                    'email': payload.get('email'),
+                    'username': payload.get('username')
+                },
+                'expires_at': datetime.fromtimestamp(exp).isoformat() + 'Z' if exp else None,
+                'time_remaining_seconds': max(0, int(time_remaining)),
+                'token_type': payload.get('token_type'),
+                'timestamp': datetime.utcnow().isoformat() + 'Z'
+            }), 200
+            
+        except jwt.ExpiredSignatureError:
+            return jsonify({
+                'valid': False,
+                'error': 'Token has expired',
+                'expired': True
+            }), 401
+        except jwt.InvalidTokenError:
+            return jsonify({
+                'valid': False,
+                'error': 'Invalid token'
+            }), 401
+        
+    except Exception as e:
+        return jsonify({
+            'valid': False,
+            'error': f'Token verification failed: {str(e)}',
+            'timestamp': datetime.utcnow().isoformat() + 'Z'
+        }), 500
+
+@service_bp.route('/revoke_token', methods=['POST'])
+def revoke_token():
+    """
+    Revoke a refresh token (logout)
+    
+    Request:
+    {
+        "refresh_token": "refresh_token_to_revoke"
+    }
+    
+    Headers:
+    - X-API-KEY: Required API key
+    
+    Response:
+    {
+        "success": true,
+        "message": "Token revoked successfully"
+    }
+    """
+    try:
+        # Validate API key
+        valid, error = validate_api_key()
+        if not valid:
+            return jsonify({'error': error}), 401
+        
+        data = request.get_json()
+        if not data:
+            return jsonify({'error': 'Request body is required'}), 400
+        
+        refresh_token = data.get('refresh_token', '')
+        
+        if not refresh_token:
+            return jsonify({
+                'success': False,
+                'error': 'Refresh token is required'
+            }), 400
+        
+        # Revoke the refresh token
+        revoked = revoke_refresh_token(refresh_token)
+        
+        if revoked:
+            return jsonify({
+                'success': True,
+                'message': 'Token revoked successfully',
+                'timestamp': datetime.utcnow().isoformat() + 'Z'
+            }), 200
+        else:
+            return jsonify({
+                'success': False,
+                'error': 'Token not found or already revoked',
+                'timestamp': datetime.utcnow().isoformat() + 'Z'
+            }), 404
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': f'Token revocation failed: {str(e)}',
+            'timestamp': datetime.utcnow().isoformat() + 'Z'
+        }), 500
+
+@service_bp.route('/auth_info', methods=['GET'])
+def auth_service_info():
+    """
+    Get information about the authentication service
+    
+    Headers:
+    - X-API-KEY: Required API key
+    """
+    try:
+        # Validate API key
+        valid, error = validate_api_key()
+        if not valid:
+            return jsonify({'error': error}), 401
+        
+        # Clean up expired refresh tokens
+        current_time = datetime.utcnow()
+        expired_tokens = [
+            token for token, data in REFRESH_TOKENS.items() 
+            if current_time > data['expires_at']
+        ]
+        
+        for token in expired_tokens:
+            del REFRESH_TOKENS[token]
+        
+        return jsonify({
+            'service': 'Pure Authentication API',
+            'version': '1.0.0',
+            'description': 'Generic authentication service for external applications',
+            'features': [
+                'JWT access tokens with configurable expiry',
+                'Secure refresh tokens',
+                'Token verification',
+                'Token revocation (logout)',
+                'User authentication without application-specific logic'
+            ],
+            'endpoints': {
+                'authenticate': {
+                    'url': '/service/pure_auth',
+                    'method': 'POST',
+                    'description': 'Authenticate user and get tokens'
+                },
+                'refresh': {
+                    'url': '/service/refresh_token',
+                    'method': 'POST',
+                    'description': 'Refresh access token using refresh token'
+                },
+                'verify': {
+                    'url': '/service/verify_token',
+                    'method': 'POST',
+                    'description': 'Verify if access token is valid'
+                },
+                'revoke': {
+                    'url': '/service/revoke_token',
+                    'method': 'POST',
+                    'description': 'Revoke refresh token (logout)'
+                },
+                'info': {
+                    'url': '/service/auth_info',
+                    'method': 'GET',
+                    'description': 'Get service information'
+                }
+            },
+            'token_info': {
+                'access_token': {
+                    'type': 'JWT',
+                    'algorithm': 'HS256',
+                    'default_expiry_minutes': 60,
+                    'max_expiry_minutes': 1440,
+                    'min_expiry_minutes': 5
+                },
+                'refresh_token': {
+                    'type': 'Secure random token',
+                    'expiry_days': 30,
+                    'single_use': True
+                }
+            },
+            'usage': {
+                'authentication_header': 'X-API-KEY: your-api-key',
+                'token_usage': 'Authorization: Bearer access-token-here',
+                'token_refresh': 'Use refresh_token endpoint before access token expires'
+            },
+            'stats': {
+                'active_refresh_tokens': len(REFRESH_TOKENS),
+                'server_time': datetime.utcnow().isoformat() + 'Z'
+            }
+        }), 200
+        
+    except Exception as e:
+        return jsonify({'error': f'Failed to get auth info: {str(e)}'}), 500

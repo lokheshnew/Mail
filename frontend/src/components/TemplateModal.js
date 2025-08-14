@@ -3,7 +3,7 @@ import { API_BASE_URL } from "../config";
 import { toast } from "react-toastify";
 import "./templateModal.css";
 
-const TemplateModal = ({ onClose, onSaved, token }) => {
+const TemplateModal = ({ onClose, onSaved, token, isDarkMode }) => {
   const [templateName, setTemplateName] = useState("");
   const [templateSubject, setTemplateSubject] = useState("");
   const [templateBody, setTemplateBody] = useState("");
@@ -71,8 +71,8 @@ const TemplateModal = ({ onClose, onSaved, token }) => {
   };
 
   return (
-    <div className="modal-overlay">
-      <div className="modal animate-scaleIn">
+    <div className={`modal-overlay ${isDarkMode ? "dark" : ""}`}>
+      <div className={`modal animate-scaleIn ${isDarkMode ? "dark" : ""}`}>
         <div className="modal-header">
           <h3 className="modal-title">Create New Template</h3>
           <button className="modal-close" onClick={handleCancel}>

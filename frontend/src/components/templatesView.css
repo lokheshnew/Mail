@@ -143,8 +143,15 @@
   align-items: center;
   margin-bottom: var(--space-8);
   padding: var(--space-6);
-  background: #3c97d3; /* light pastel blue */
-  border-radius: var(--radius-xl);
+  background: #0d1b2a; /* deep navy */
+  border: 1px solid #0d1b2a;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-  border: 1px solid #3c97d3;
+  /* border: 1px solid #424242; */
+}
+
+.templates-header.dark h2 {
+  font-size: 1.875rem;
+  font-weight: 700;
+  margin: 0;
+  color: #c6c6c8; /* deep slate blue text */
 }

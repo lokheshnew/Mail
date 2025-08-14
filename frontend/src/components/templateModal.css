@@ -1,14 +1,14 @@
 .modal-overlay {
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent dark background */
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(8px);
   display: flex;
-  justify-content: center;
   align-items: center;
+  justify-content: center;
   z-index: 1000;
+  padding: 20px;
+  animation: fadeIn 0.2s ease-out;
 }
 
 .modal {
@@ -150,4 +150,72 @@
   to {
     transform: rotate(360deg);
   }
+}
+
+/* Dark mode overlay */
+.modal-overlay.dark {
+  background-color: rgba(0, 0, 0, 0.7);
+}
+
+/* Dark mode modal */
+.modal.dark {
+  background-color: #2a2a2a;
+  color: #e0e0e0;
+}
+
+/* Dark mode modal title */
+.modal.dark .modal-title {
+  color: #f5f5f5;
+}
+
+/* Dark mode inputs */
+.modal.dark .input,
+.modal.dark .textarea {
+  background-color: #2a2a2a;
+  border: 1px solid #555;
+  color: #f5f5f5;
+}
+
+.modal.dark .input:focus,
+.modal.dark .textarea:focus {
+  border-color: #888;
+}
+
+/* Dark mode labels */
+.modal.dark .input-label {
+  color: #ccc;
+}
+
+/* Dark mode close button */
+.modal.dark .modal-close {
+  color: #bbb;
+}
+
+.modal.dark .modal-close:hover {
+  color: #fff;
+}
+
+/* Dark mode footer buttons */
+.modal.dark .btn-primary {
+  background-color: #5c6bc0;
+  color: #fff;
+}
+
+.modal.dark .btn-primary:hover:not(:disabled) {
+  background-color: #3f4c9e;
+}
+
+.modal.dark .btn-ghost {
+  background-color: transparent;
+  color: #ccc;
+}
+
+.modal.dark .btn-ghost:hover:not(:disabled) {
+  background-color: #333;
+}
+
+/* Dark mode loading spinner */
+.modal.dark .loading-spinner {
+  border: 2px solid #444;
+  border-top: 2px solid #5c6bc0;
 }

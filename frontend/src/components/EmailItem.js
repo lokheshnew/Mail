@@ -261,7 +261,11 @@ const EmailItem = ({
   };
 
   return (
-    <div className={`email-item-wrapper ${isDarkMode ? "dark" : ""}`}>
+    <div
+      className={`email-item-wrapper ${isDarkMode ? "dark" : ""} ${
+        mail.message_status === "unread" ? "unread" : ""
+      }`}
+    >
       <div
         className={`email-item ${isSelected ? "selected" : ""} ${
           mail.message_status === "unread" ? "unread" : ""

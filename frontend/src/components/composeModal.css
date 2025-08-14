@@ -87,6 +87,10 @@
   flex-shrink: 0;
 }
 
+.compose-modal.dark .form-row label {
+  color: #e0e0e0; /* light text for dark background */
+}
+
 .form-row input {
   flex: 1;
   border: none;
@@ -99,12 +103,24 @@
   transition: border-color 0.3s ease;
 }
 
+.compose-modal.dark .form-row input {
+  color: #e0e0e0; /* light text for dark background */
+}
+
 .form-row input:focus {
   border-bottom-color: #3399ff;
 }
 
+.compose-modal.dark .form-row input:focus {
+  color: #e0e0e0; /* light text for dark background */
+}
+
 .form-row input::placeholder {
   color: #99aac2;
+}
+
+.compose-modal.dark .form-row input::placeholder {
+  color: #e0e0e0; /* light text for dark background */
 }
 
 .message-row {
@@ -131,6 +147,12 @@
   transition: all 0.3s ease;
   min-height: 200px;
   line-height: 1.6;
+}
+
+.compose-modal.dark .message-row textarea {
+  color: #e0e0e0; /* light text */
+  background: #2a2a2a; /* dark background */
+  border: 2px solid #555; /* subtle border for dark mode */
 }
 
 .message-row textarea:focus {
@@ -310,4 +332,52 @@
 
 .btn.muted:hover:not(:disabled) {
   background-color: #e0e0e0;
+}
+
+.compose-overlay.dark {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+  animation: fadeIn 0.2s ease-out;
+}
+
+.compose-modal.dark {
+  background: #1f1f1f;
+  border-radius: 16px;
+  width: 90%;
+  max-width: 700px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  overflow: hidden;
+  animation: scaleIn 0.3s ease-out;
+  border: 1px solid #444;
+}
+
+.compose-header.dark {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 24px;
+  border-bottom: 1px solid #444;
+  background: #2a2a2a;
+}
+
+.compose-modal.dark .compose-header h3 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #f0f8ff;
+}
+
+.compose-modal.dark .compose-form {
+  background: #2a2a2a; /* dark background */
+  color: #e0e0e0; /* light text */
 }

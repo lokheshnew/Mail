@@ -1,12 +1,7 @@
 /* .email-item {
-  background: #fdfdff;
-  border-left: 4px solid #a0c4ff;
-  border-radius: 12px;
-  padding: 16px 20px;
-  margin-bottom: 14px;
-  box-shadow: 0 3px 8px rgba(160, 196, 255, 0.15);
-  transition: all 0.3s ease;
-  cursor: pointer;
+  background-color: white;
+  font-weight: normal;
+  transition: background-color 0.3s ease, font-weight 0.3s ease;
 } */
 
 .email-item-wrapper {
@@ -18,11 +13,12 @@
   box-shadow: 0 3px 8px rgba(160, 196, 255, 0.15);
   transition: all 0.3s ease;
   cursor: pointer;
+  position: relative;
 }
 
-.email-item:hover {
-  background-color: #f0f4ff;
-  box-shadow: 0 5px 12px rgba(160, 196, 255, 0.25);
+.email-item-wrapper:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.15);
 }
 
 .email-item-header {
@@ -162,10 +158,9 @@
   border: none;
   cursor: pointer;
   font-size: 1rem;
-  padding: var(--space-2);
-  border-radius: var(--radius-md);
-  color: var(--text-tertiary);
-  transition: all var(--transition-fast);
+  /* padding: var(--space-2); */
+  /* border-radius: var(--radius-md); */
+  /* transition: all var(--transition-fast); */
   width: 32px;
   height: 32px;
   display: flex;
@@ -177,9 +172,7 @@
 .scheduled-actions button:hover,
 .trash-actions button:hover,
 .draft-actions button:hover {
-  background: var(--bg-tertiary);
-  color: var(--text-primary);
-  transform: scale(1.1);
+  transform: scale(1.6);
 }
 
 /* DARK MODE STYLES */
@@ -190,7 +183,7 @@
   box-shadow: 0 3px 6px rgba(94, 129, 172, 0.2);
 }
 
-.email-item-wrapper.dark .email-item:hover {
+.email-item-wrapper.dark:hover {
   background-color: #2a2a40;
   box-shadow: 0 5px 10px rgba(94, 129, 172, 0.3);
 }
@@ -257,11 +250,6 @@
   background-color: transparent;
 }
 
-.email-item-wrapper.dark .email-actions button:hover {
-  background: #3a3f58;
-  color: #e0e0e0;
-}
-
 .email-item-wrapper.dark .attachment-item {
   display: flex;
   align-items: center;
@@ -269,4 +257,57 @@
   background: #1e1e1f;
   padding: 8px 12px;
   border-radius: 8px;
+}
+
+.email-item-wrapper.unread {
+  background-color: #f6f3ff;
+  font-weight: 600;
+}
+
+.email-item-wrapper.read {
+  background-color: #ffffff;
+  font-weight: normal;
+}
+
+.email-item {
+  transition: background-color 0.3s ease, font-weight 0.3s ease;
+}
+
+/* Dark mode wrapper */
+.email-item-wrapper.dark.unread {
+  background-color: #2e3036; /* dark gray for unread */
+  font-weight: 600;
+  color: #e0e0e0; /* light text */
+}
+
+.email-item-wrapper.dark.read {
+  background-color: #2a2a2a; /* slightly darker gray for read */
+  font-weight: normal;
+  color: #cfcfcf; /* lighter gray text */
+}
+
+.email-item.dark {
+  transition: background-color 0.3s ease, font-weight 0.3s ease;
+}
+
+/* Selected email in dark mode */
+.email-item.dark.selected {
+  background-color: #444; /* highlight selected email */
+}
+
+/* Hover effect in dark mode */
+.email-item.dark:hover {
+  background-color: #3f3f3f;
+}
+
+/* Unread indicator for dark mode */
+.email-item-wrapper.dark.unread .sender-name,
+.email-item-wrapper.dark.unread .email-subject {
+  font-weight: 600;
+  color: #f0f0f0;
+}
+
+/* Marking read/unread animation (optional) */
+.email-item.dark.marking-read {
+  background-color: #555; /* subtle flash when marking read */
 }

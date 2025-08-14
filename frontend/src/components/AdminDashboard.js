@@ -3,7 +3,14 @@ import axios from "axios";
 import { useNavigate, Link } from "react-router-dom";
 import "./AdminDashboard.css";
 import { API_BASE_URL } from "../config";
-import { FaUsers, FaEnvelope, FaChartBar, FaSignOutAlt, FaCog, FaSpinner } from "react-icons/fa";
+import {
+  FaUsers,
+  FaEnvelope,
+  FaChartBar,
+  FaSignOutAlt,
+  FaCog,
+  FaSpinner,
+} from "react-icons/fa";
 
 function AdminDashboard() {
   const [domainUsers, setDomainUsers] = useState([]);
@@ -11,7 +18,7 @@ function AdminDashboard() {
     total_users: 0,
     active_users: 0,
     total_emails: 0,
-    storage_used: { used_mb: 0, total_mb: 0, percentage: 0 }
+    storage_used: { used_mb: 0, total_mb: 0, percentage: 0 },
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -19,47 +26,49 @@ function AdminDashboard() {
   const [dataLoading, setDataLoading] = useState(false);
 
   const navigate = useNavigate();
-  
+
   // Get admin information from localStorage
   const adminEmail = localStorage.getItem("admin_email");
   const adminDomain = localStorage.getItem("admin_domain");
   const adminToken = localStorage.getItem("admin_token");
-  
+
   // Check if user is logged in as admin
   useEffect(() => {
-    if (!adminToken || !adminEmail || !adminEmail.startsWith('admin@')) {
+    if (!adminToken || !adminEmail || !adminEmail.startsWith("admin@")) {
       navigate("/admin/login");
     } else {
       fetchDomainUsers();
       fetchDomainStats();
     }
   }, [adminToken, adminEmail, navigate]);
-  
+
   // Fetch users of this domain
   const fetchDomainUsers = async () => {
     setDataLoading(true);
     setError("");
-    
+
     try {
       // ✅ CORRECT ENDPOINT - Using /company/domain_users
-      const response = await axios.get(`${API_BASE_URL}/company/domain_users/${adminDomain}`, {
-        headers: { 
-          'Authorization': `Bearer ${adminToken}`,
-          'Content-Type': 'application/json'
+      const response = await axios.get(
+        `${API_BASE_URL}/company/domain_users/${adminDomain}`,
+        {
+          headers: {
+            Authorization: `Bearer ${adminToken}`,
+            "Content-Type": "application/json",
+          },
         }
-      });
-      
+      );
+
       if (response.data && response.data.users) {
         setDomainUsers(response.data.users);
       } else {
         setDomainUsers([]);
       }
-      
     } catch (error) {
       console.error("Error fetching domain users:", error);
-      
+
       let errorMessage = "Failed to load users. ";
-      
+
       if (error.response?.status === 401) {
         errorMessage = "Authentication failed. Please login again.";
         handleLogout();
@@ -73,7 +82,7 @@ function AdminDashboard() {
       } else {
         errorMessage += "Please try again.";
       }
-      
+
       setError(errorMessage);
       setDomainUsers([]);
     } finally {
@@ -81,18 +90,21 @@ function AdminDashboard() {
       setLoading(false);
     }
   };
-  
+
   // Fetch domain statistics
   const fetchDomainStats = async () => {
     try {
       // ✅ CORRECT ENDPOINT - Using /company/domain_stats
-      const response = await axios.get(`${API_BASE_URL}/company/domain_stats/${adminDomain}`, {
-        headers: { 
-          'Authorization': `Bearer ${adminToken}`,
-          'Content-Type': 'application/json'
+      const response = await axios.get(
+        `${API_BASE_URL}/company/domain_stats/${adminDomain}`,
+        {
+          headers: {
+            Authorization: `Bearer ${adminToken}`,
+            "Content-Type": "application/json",
+          },
         }
-      });
-      
+      );
+
       if (response.data && response.data.stats) {
         setDomainStats(response.data.stats);
       } else {
@@ -101,40 +113,43 @@ function AdminDashboard() {
           total_users: 0,
           active_users: 0,
           total_emails: 0,
-          storage_used: { used_mb: 0, total_mb: 100, percentage: 0 }
+          storage_used: { used_mb: 0, total_mb: 100, percentage: 0 },
         });
       }
-      
     } catch (error) {
       console.error("Error fetching domain stats:", error);
-      
+
       // Set fallback stats based on user data we have
       const userCount = domainUsers.length;
-      const activeCount = domainUsers.filter(user => user.status === 'active').length;
-      
+      const activeCount = domainUsers.filter(
+        (user) => user.status === "active"
+      ).length;
+
       setDomainStats({
         total_users: userCount,
         active_users: activeCount,
         total_emails: 0, // Will be updated when backend implements this
-        storage_used: { used_mb: 0, total_mb: 100, percentage: 0 }
+        storage_used: { used_mb: 0, total_mb: 100, percentage: 0 },
       });
     }
   };
-  
+
   // Update stats when users change
   useEffect(() => {
     if (domainUsers.length > 0) {
       const totalUsers = domainUsers.length;
-      const activeUsers = domainUsers.filter(user => user.status === 'active').length;
-      
-      setDomainStats(prev => ({
+      const activeUsers = domainUsers.filter(
+        (user) => user.status === "active"
+      ).length;
+
+      setDomainStats((prev) => ({
         ...prev,
         total_users: totalUsers,
-        active_users: activeUsers
+        active_users: activeUsers,
       }));
     }
   }, [domainUsers]);
-  
+
   const handleLogout = () => {
     // Clear admin session
     localStorage.removeItem("admin_token");
@@ -143,7 +158,7 @@ function AdminDashboard() {
     localStorage.removeItem("admin_id");
     localStorage.removeItem("admin_domain");
     localStorage.removeItem("is_admin");
-    
+
     navigate("/admin/login");
   };
 
@@ -167,63 +182,83 @@ function AdminDashboard() {
     return email.split("@")[0].charAt(0).toUpperCase();
   };
 
+  const showAlert = (message, type = "info") => {
+    // Remove existing alert if any
+    const existing = document.querySelector(".dynamic-alert");
+    if (existing) existing.remove();
+
+    // Create alert div
+    const alertDiv = document.createElement("div");
+    alertDiv.className = `dynamic-alert ${type}`;
+    alertDiv.innerHTML = `
+    <span>${message}</span>
+    <button>✕</button>
+  `;
+
+    // Close button
+    alertDiv.querySelector("button").onclick = () => alertDiv.remove();
+
+    // Append to body (or container)
+    document.body.appendChild(alertDiv);
+
+    // Auto-remove after 4 seconds
+    setTimeout(() => alertDiv.remove(), 4000);
+  };
+
+  // Handlers
   const handleAddUser = () => {
-    // TODO: Implement add user functionality
-    alert("Add user functionality will be implemented soon!");
+    showAlert("Add user functionality will be implemented soon!", "info");
   };
 
   const handleEditUser = (user) => {
-    // TODO: Implement edit user functionality
-    alert(`Edit user functionality for ${user.email} will be implemented soon!`);
+    showAlert(
+      `Edit user functionality for ${user.email} will be implemented soon!`,
+      "info"
+    );
   };
 
   const handleDeleteUser = (user) => {
-    // TODO: Implement delete user functionality
     if (user.email === adminEmail) {
-      alert("Cannot delete admin account!");
+      showAlert("Cannot delete admin account!", "error");
       return;
     }
-    
-    if (window.confirm(`Are you sure you want to delete user ${user.email}?`)) {
-      alert("Delete user functionality will be implemented soon!");
-    }
+
+    showAlert(`Delete user functionality will be implemented soon!`, "error");
   };
 
   return (
     <div className="admin-dashboard">
       <div className="admin-sidebar">
         <div className="admin-profile">
-          <div className="admin-avatar">
-            {getInitials(adminEmail)}
-          </div>
+          <div className="admin-avatar">{getInitials(adminEmail)}</div>
           <div className="admin-info">
             <h3>Admin Panel</h3>
             <p>{adminEmail}</p>
           </div>
         </div>
-        
+
         <nav className="admin-nav">
           <ul>
-            <li 
-              className={activeSection === "users" ? "active" : ""} 
+            <li
+              className={activeSection === "users" ? "active" : ""}
               onClick={() => setActiveSection("users")}
             >
               <FaUsers /> Users
             </li>
-            <li 
-              className={activeSection === "emails" ? "active" : ""} 
+            <li
+              className={activeSection === "emails" ? "active" : ""}
               onClick={() => setActiveSection("emails")}
             >
               <FaEnvelope /> Emails
             </li>
-            <li 
-              className={activeSection === "stats" ? "active" : ""} 
+            <li
+              className={activeSection === "stats" ? "active" : ""}
               onClick={() => setActiveSection("stats")}
             >
               <FaChartBar /> Statistics
             </li>
-            <li 
-              className={activeSection === "settings" ? "active" : ""} 
+            <li
+              className={activeSection === "settings" ? "active" : ""}
               onClick={() => setActiveSection("settings")}
             >
               <FaCog /> Settings
@@ -233,13 +268,12 @@ function AdminDashboard() {
             </li>
           </ul>
         </nav>
-        
+
         <div className="domain-info">
-          <h4>Domain</h4>
-          <p>{adminDomain}</p>
+          <p>Domain : {adminDomain}</p>
         </div>
       </div>
-      
+
       <div className="admin-content">
         <header className="admin-header">
           <h2>
@@ -254,12 +288,16 @@ function AdminDashboard() {
                 Add New User
               </button>
             )}
-            <button className="refresh-btn" onClick={refreshData} disabled={loading}>
+            <button
+              className="refresh-btn"
+              onClick={refreshData}
+              disabled={loading}
+            >
               {loading ? <FaSpinner className="spinning" /> : "Refresh"}
             </button>
           </div>
         </header>
-        
+
         <div className="admin-stats-overview">
           <div className="stat-card">
             <h3>Total Users</h3>
@@ -280,24 +318,25 @@ function AdminDashboard() {
             <h3>Storage</h3>
             <p className="stat-value">{domainStats.storage_used.used_mb} MB</p>
             <div className="storage-bar">
-              <div 
-                className="storage-used" 
+              <div
+                className="storage-used"
                 style={{ width: `${domainStats.storage_used.percentage}%` }}
               ></div>
             </div>
             <p className="stat-detail">
-              {domainStats.storage_used.percentage}% of {domainStats.storage_used.total_mb} MB
+              {domainStats.storage_used.percentage}% of{" "}
+              {domainStats.storage_used.total_mb} MB
             </p>
           </div>
         </div>
-        
+
         {error && (
           <div className="error-message">
             <p>{error}</p>
             <button onClick={refreshData}>Retry</button>
           </div>
         )}
-        
+
         {activeSection === "users" && (
           <div className="section-content">
             <div className="users-list">
@@ -322,31 +361,40 @@ function AdminDashboard() {
                   ) : domainUsers.length === 0 ? (
                     <tr>
                       <td colSpan="6" className="no-data">
-                        {error ? "Failed to load users" : "No users found for this domain"}
+                        {error
+                          ? "Failed to load users"
+                          : "No users found for this domain"}
                       </td>
                     </tr>
                   ) : (
                     domainUsers.map((user, index) => (
-                      <tr key={user.user_id || index} className={user.email === adminEmail ? "admin-row" : ""}>
+                      <tr
+                        key={user.user_id || index}
+                        className={user.email === adminEmail ? "admin-row" : ""}
+                      >
                         <td>{user.username || "N/A"}</td>
                         <td>{user.email}</td>
                         <td>
-                          <span className={`status-badge ${user.status || 'active'}`}>
-                            {user.status || 'active'}
+                          <span
+                            className={`status-badge ${
+                              user.status || "active"
+                            }`}
+                          >
+                            {user.status || "active"}
                           </span>
                         </td>
                         <td>{formatDate(user.created_at)}</td>
                         <td>{formatDate(user.last_login)}</td>
                         <td>
                           <div className="action-buttons">
-                            <button 
+                            <button
                               className="edit-btn"
                               onClick={() => handleEditUser(user)}
                             >
                               Edit
                             </button>
                             {user.email !== adminEmail && (
-                              <button 
+                              <button
                                 className="delete-btn"
                                 onClick={() => handleDeleteUser(user)}
                               >
@@ -363,7 +411,7 @@ function AdminDashboard() {
             </div>
           </div>
         )}
-        
+
         {activeSection === "emails" && (
           <div className="section-content">
             <div className="placeholder-text">
@@ -379,7 +427,7 @@ function AdminDashboard() {
             </div>
           </div>
         )}
-        
+
         {activeSection === "stats" && (
           <div className="section-content">
             <div className="stats-details">
@@ -389,12 +437,22 @@ function AdminDashboard() {
                   <h4>User Statistics</h4>
                   <p>Total Users: {domainStats.total_users}</p>
                   <p>Active Users: {domainStats.active_users}</p>
-                  <p>Inactive Users: {domainStats.total_users - domainStats.active_users}</p>
+                  <p>
+                    Inactive Users:{" "}
+                    {domainStats.total_users - domainStats.active_users}
+                  </p>
                 </div>
                 <div className="stat-item">
                   <h4>Email Statistics</h4>
                   <p>Total Emails: {domainStats.total_emails}</p>
-                  <p>Average per User: {domainStats.total_users > 0 ? Math.round(domainStats.total_emails / domainStats.total_users) : 0}</p>
+                  <p>
+                    Average per User:{" "}
+                    {domainStats.total_users > 0
+                      ? Math.round(
+                          domainStats.total_emails / domainStats.total_users
+                        )
+                      : 0}
+                  </p>
                 </div>
                 <div className="stat-item">
                   <h4>Storage Statistics</h4>
@@ -406,7 +464,7 @@ function AdminDashboard() {
             </div>
           </div>
         )}
-        
+
         {activeSection === "settings" && (
           <div className="section-content">
             <div className="domain-settings">
@@ -426,12 +484,14 @@ function AdminDashboard() {
                 </div>
                 <div className="form-group">
                   <label>Welcome Email Template</label>
-                  <textarea 
-                    rows="6" 
+                  <textarea
+                    rows="6"
                     defaultValue={`Hello {username},\n\nWelcome to ${adminDomain} Mail!\n\nYour account has been successfully created. You can now send and receive emails using your new address: {email}.\n\nBest regards,\nThe ${adminDomain} Team`}
                   ></textarea>
                 </div>
-                <button type="submit" className="save-settings-btn">Save Settings</button>
+                <button type="submit" className="save-settings-btn">
+                  Save Settings
+                </button>
               </form>
             </div>
           </div>
