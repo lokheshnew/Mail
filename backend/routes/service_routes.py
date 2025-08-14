@@ -21,6 +21,7 @@ encryption_service = EncryptionService()
 
 # API Key validation
 def validate_api_key():
+
     """Validate API key from request headers"""
     api_key = request.headers.get('X-API-KEY')
     
@@ -204,9 +205,7 @@ def send_email_enhanced():
     """
     try:
         # Validate API key (required for all send_email requests)
-        print('hello')
-        import pdb;
-        pdb.set_trace()
+        
         valid, error = validate_api_key()
         if not valid:
             return jsonify({'error': error}), 401
@@ -684,8 +683,9 @@ def pure_authentication():
             return jsonify({'error': error}), 401
         
         data = request.get_json()
-        if not data:
-            return jsonify({'error': 'Request body is required'}), 400
+        print(data)
+        # if not data:
+        #     return jsonify({'error': 'Request body is required'}), 400
         
         email = data.get('email', '').strip().lower()
         password = data.get('password', '')
