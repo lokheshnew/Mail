@@ -188,7 +188,32 @@ def verify_email_enhanced():
         return jsonify(error_response), 500
 
 # ========== ENHANCED SEND EMAIL API ==========
+# Add this function to your service_routes.py
 
+def process_api_attachment(attachment_data):
+    """
+    Process attachment data from API requests to match expected format
+    """
+    if not attachment_data:
+        return None
+    
+    # Case 1: Already in correct format (dict with content and filename)
+    if isinstance(attachment_data, dict) and 'content' in attachment_data and 'filename' in attachment_data:
+        return attachment_data
+    
+    # Case 2: Raw base64 string (your current case)
+    if isinstance(attachment_data, str):
+        # Check if it's base64 data
+        if attachment_data.startswith('/9j/') or attachment_data.startswith('iVBORw0KGgo') or len(attachment_data) > 100:
+            return {
+                "filename": "attachment.pdf",  # Default filename - you might want to make this configurable
+                "content": attachment_data,
+                "type": "base64"
+            }
+    
+    return None
+
+# Update your send_email_enhanced function in service_routes.py
 @service_bp.route('/send_email', methods=['POST'])
 def send_email_enhanced():
     """
@@ -254,8 +279,11 @@ def send_email_enhanced():
         if not all([sender, recipient]):
             return jsonify({'error': 'Sender and recipient are required'}), 400
         
+        # FIXED: Process attachment to match expected format
+        processed_attachment = process_api_attachment(attachment) if attachment else None
+        
         # Send email using existing service
-        success, error = MailService.send_mail(sender, recipient, subject, body, attachment)
+        success, error = MailService.send_mail(sender, recipient, subject, body, processed_attachment)
         
         if not success:
             error_response = {'error': error}
@@ -275,7 +303,8 @@ def send_email_enhanced():
             'message': 'Email sent successfully',
             'timestamp': datetime.now().isoformat(),
             'from': sender,
-            'to': recipient
+            'to': recipient,
+            'attachment_processed': processed_attachment is not None
         }
         
         # If encrypted request, encrypt the response
