@@ -1,0 +1,136 @@
+.email-list {
+  padding: 20px;
+  background-color: #e5ecf3;
+  border-radius: 12px;
+  max-height: calc(100vh - 100px);
+  overflow-y: auto;
+}
+
+.empty-state {
+  text-align: center;
+  margin-top: 40px;
+  color: #888;
+}
+
+.empty-icon {
+  font-size: 48px;
+  margin-bottom: 10px;
+}
+
+.empty-state h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: var(--space-2);
+}
+
+.empty-state p {
+  color: var(--text-tertiary);
+}
+
+.email-body {
+  background-color: rgb(229, 236, 238);
+  border-radius: 12px;
+  overflow: hidden;
+  padding: 20px; /* Adds spacing inside the container */
+  font-size: 1.1rem; /* Increases the text size */
+  line-height: 1.6; /* Improves readability */
+}
+
+.email-attachment {
+  background: rgb(208, 218, 220);
+  padding: var(--space-4);
+  border-radius: rgb(208, 218, 220);
+  border: 1px solid rgb(208, 218, 220);
+}
+
+.attachment-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.attachment-icon {
+  font-size: 1.25rem;
+  color: var(--primary-600);
+}
+
+.attachment-link {
+  color: var(--primary-600);
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 0.875rem;
+  transition: color var(--transition-fast);
+}
+
+.attachment-link:hover {
+  color: var(--primary-700);
+  text-decoration: underline;
+}
+
+.email-list::-webkit-scrollbar {
+  width: 8px;
+}
+.email-list::-webkit-scrollbar-thumb {
+  background-color: #c4c4c4;
+  border-radius: 4px;
+}
+
+.email-list.dark {
+  background-color: #22293b; /* Near black */
+  color: #e6e6e6;
+}
+
+.email-list.dark .empty-state {
+  color: #999;
+}
+
+.email-list.dark .empty-icon {
+  color: #666;
+}
+
+.email-list.dark .empty-state h3 {
+  color: #f0f0f0;
+}
+
+.email-list.dark .empty-state p {
+  color: #aaa;
+}
+
+.email-list.dark .email-body {
+  background-color: #1a1a1a; /* Slightly lighter than outer bg */
+  border-radius: 12px;
+  padding: 20px;
+  font-size: 1.1rem;
+  line-height: 1.6;
+  color: #e8e8e8;
+}
+
+.email-list.dark .email-attachment {
+  background: #222; /* very dark grey */
+  border: 1px solid #333;
+  border-radius: 8px;
+}
+
+.email-list.dark .attachment-icon {
+  color: #4dabf7; /* vibrant blue on dark */
+}
+
+.email-list.dark .attachment-link {
+  color: #58a6ff;
+}
+
+.email-list.dark .attachment-link:hover {
+  color: #91caff;
+  text-decoration: underline;
+}
+
+/* Dark Mode Scrollbar */
+.email-list.dark::-webkit-scrollbar {
+  width: 8px;
+}
+
+.email-list.dark::-webkit-scrollbar-thumb {
+  background-color: #333;
+  border-radius: 4px;
+}

@@ -3,6 +3,7 @@ import { API_BASE_URL } from "../config";
 import { toast } from "react-toastify";
 import EmailItem from "./EmailItem";
 import BulkActionsToolbar from "./BulkActionsToolbar";
+import "./emailList.css";
 
 const EmailList = ({
   emails,
@@ -21,6 +22,8 @@ const EmailList = ({
   fetchTrash,
   fetchInbox,
   fetchSent,
+  isDarkMode,
+  toggleDarkMode,
 }) => {
   // Email actions
   const handleMarkAsRead = async (mail) => {
@@ -28,9 +31,9 @@ const EmailList = ({
       // ✅ CORRECT ENDPOINT - Using /mail/mark_read
       const res = await fetch(`${API_BASE_URL}/mail/mark_read`, {
         method: "POST",
-        headers: { 
+        headers: {
           "Content-Type": "application/json",
-          'Authorization': `Bearer ${token}`
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({ mail, activeTab }),
       });
@@ -54,9 +57,9 @@ const EmailList = ({
       // ✅ CORRECT ENDPOINT - Using /mail/mark_unread
       const res = await fetch(`${API_BASE_URL}/mail/mark_unread`, {
         method: "POST",
-        headers: { 
+        headers: {
           "Content-Type": "application/json",
-          'Authorization': `Bearer ${token}`
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({ mail, activeTab }),
       });
@@ -77,9 +80,9 @@ const EmailList = ({
       // ✅ CORRECT ENDPOINT - Using /mail/delete_mail
       const res = await fetch(`${API_BASE_URL}/mail/delete_mail`, {
         method: "POST",
-        headers: { 
+        headers: {
           "Content-Type": "application/json",
-          'Authorization': `Bearer ${token}`
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({ mail: mailToDelete, activeTab }),
       });
@@ -106,19 +109,21 @@ const EmailList = ({
           // ✅ CORRECT ENDPOINT - Using /mail/permanent_delete
           const res = await fetch(`${API_BASE_URL}/mail/permanent_delete`, {
             method: "POST",
-            headers: { 
+            headers: {
               "Content-Type": "application/json",
-              'Authorization': `Bearer ${token}`
+              Authorization: `Bearer ${token}`,
             },
             body: JSON.stringify({ mail }),
           });
-          
+
           if (res.ok) {
             fetchTrash();
             toast.success("Email permanently deleted");
           } else {
             const errorData = await res.json();
-            toast.error(errorData.error || "Failed to delete email permanently");
+            toast.error(
+              errorData.error || "Failed to delete email permanently"
+            );
           }
         } catch (err) {
           console.error("Error permanently deleting:", err);
@@ -133,17 +138,17 @@ const EmailList = ({
       // ✅ CORRECT ENDPOINT - Using /mail/restore_email
       const res = await fetch(`${API_BASE_URL}/mail/restore_email`, {
         method: "POST",
-        headers: { 
+        headers: {
           "Content-Type": "application/json",
-          'Authorization': `Bearer ${token}`
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({ mail }),
       });
-      
+
       if (res.ok) {
         fetchTrash(); // Update trash count
         onRefresh(); // Update current folder
-        
+
         // Update the folder where the email was restored to
         // Check if it's an inbox or sent email and refresh accordingly
         if (fetchInbox) fetchInbox(); // Refresh inbox
@@ -164,13 +169,13 @@ const EmailList = ({
       // ✅ CORRECT ENDPOINT - Using /mail/delete_draft
       const res = await fetch(`${API_BASE_URL}/mail/delete_draft`, {
         method: "POST",
-        headers: { 
+        headers: {
           "Content-Type": "application/json",
-          'Authorization': `Bearer ${token}`
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({ draft }),
       });
-      
+
       if (res.ok) {
         onRefresh();
         toast.success("Draft deleted");
@@ -191,7 +196,7 @@ const EmailList = ({
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          'Authorization': `Bearer ${token}`
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           activeTab: "scheduled",
@@ -225,9 +230,9 @@ const EmailList = ({
       // ✅ CORRECT ENDPOINT - Using /mail/bulk_action
       const res = await fetch(`${API_BASE_URL}/mail/bulk_action`, {
         method: "POST",
-        headers: { 
+        headers: {
           "Content-Type": "application/json",
-          'Authorization': `Bearer ${token}`
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           action,
@@ -235,17 +240,17 @@ const EmailList = ({
           folder: activeTab,
         }),
       });
-      
+
       if (res.ok) {
         onSelectEmails([]);
         onRefresh();
-        
+
         // If bulk restoring from trash, refresh inbox and sent
         if (action === "restore" && activeTab === "trash") {
           if (fetchInbox) fetchInbox();
           if (fetchSent) fetchSent();
         }
-        
+
         toast.success(`Bulk ${action} completed successfully`);
       } else {
         const errorData = await res.json();
@@ -289,22 +294,27 @@ const EmailList = ({
       trash: { icon: "🗑️", text: "Trash is empty" },
       drafts: { icon: "📝", text: "No drafts" },
       scheduled: { icon: "📋", text: "No scheduled emails" },
-      default: { icon: "📫", text: isSearching ? "No search results" : "Your inbox is empty" }
+      default: {
+        icon: "📫",
+        text: isSearching ? "No search results" : "Your inbox is empty",
+      },
     };
-    
+
     return configs[activeTab] || configs.default;
   };
 
   const emptyState = getEmptyStateConfig();
 
   return (
-    <div className="email-list">
+    <div className={`email-list ${isDarkMode ? "dark" : ""}`}>
       {selectedEmails.length > 0 && (
         <BulkActionsToolbar
           selectedCount={selectedEmails.length}
           onBulkAction={handleBulkAction}
           onClearSelection={() => onSelectEmails([])}
           activeTab={activeTab}
+          isDarkMode={isDarkMode}
+          toggleDarkMode={toggleDarkMode}
         />
       )}
 
@@ -323,7 +333,9 @@ const EmailList = ({
             activeTab={activeTab}
             isSelected={selectedEmail === index}
             isChecked={isEmailSelected(mail)}
-            onSelect={() => onSelectEmail(selectedEmail === index ? null : index)}
+            onSelect={() =>
+              onSelectEmail(selectedEmail === index ? null : index)
+            }
             onCheck={(isChecked) => handleEmailSelect(mail, isChecked)}
             onMarkAsRead={() => handleMarkAsRead(mail)}
             onMarkAsUnread={() => handleMarkAsUnread(mail)}
@@ -336,6 +348,8 @@ const EmailList = ({
             }}
             onDeleteDraft={() => handleDeleteDraft(mail)}
             onDeleteScheduled={() => handleDeleteScheduled(mail)}
+            isDarkMode={isDarkMode}
+            toggleDarkMode={toggleDarkMode}
           />
         ))
       )}

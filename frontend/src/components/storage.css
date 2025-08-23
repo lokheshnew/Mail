@@ -1,0 +1,96 @@
+.storage-view {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 25px;
+  justify-content: space-between;
+  padding: 18px;
+  overflow-y: hidden;
+}
+
+.storage-card.animate-fadeIn h2,
+.stats-card.animate-fadeIn h2 {
+  color: black;
+}
+.storage-card,
+.stats-card {
+  flex: 1 1 20%;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+  padding: 16px;
+  transition: box-shadow 0.3s ease;
+}
+
+.storage-details-enhanced .storage-label {
+  color: #25aa94;
+}
+.circular-progress-container {
+  width: 120px;
+  height: 120px;
+  margin: 0 auto 20px;
+}
+
+.badge {
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: bold;
+  text-transform: uppercase;
+}
+
+.badge-success {
+  background-color: #e8f5e9;
+  color: #388e3c;
+}
+
+.badge-warning {
+  background-color: #fff8e1;
+  color: #f9a825;
+}
+
+.badge-error {
+  background-color: #ffebee;
+  color: #d32f2f;
+}
+
+@media (max-width: 768px) {
+  .storage-card,
+  .stats-card {
+    flex: 1 1 100%;
+  }
+}
+
+.storage-view.dark {
+  background-color: #121212;
+}
+
+.storage-view.dark .storage-card.animate-fadeIn h2,
+.storage-view.dark .stats-card.animate-fadeIn h2 {
+  color: white;
+}
+
+.storage-view.dark .storage-card,
+.storage-view.dark .stats-card {
+  background: #1e1e1e;
+  box-shadow: 0 4px 10px rgba(255, 255, 255, 0.05);
+  color: #f0f0f0;
+}
+
+.storage-view.dark .badge-success {
+  background-color: #2e7d32;
+  color: #c8e6c9;
+}
+
+.storage-view.dark .badge-warning {
+  background-color: #f9a825;
+  color: #fff8e1;
+}
+
+.storage-view.dark .badge-error {
+  background-color: #d32f2f;
+  color: #ffebee;
+}
+
+.storage-view.dark .circular-progress-container {
+  background-color: #1e1e1e;
+}

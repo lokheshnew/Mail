@@ -1,23 +1,14 @@
-import React from 'react';
-import { useTheme } from './ThemeProvider';
-import { FaSun, FaMoon } from 'react-icons/fa';
+import React from "react";
+import { FaSun, FaMoon } from "react-icons/fa";
+import "./themeToggle.css";
 
-const ThemeToggle = ({ className = '' }) => {
-  const { theme, toggleTheme } = useTheme();
-
+const ThemeToggle = ({ isDarkMode, toggleDarkMode }) => {
   return (
-    <button
-      onClick={toggleTheme}
-      className={`theme-toggle ${className}`}
-      aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
-      title={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
-    >
-      <div className="theme-toggle-slider">
-        <span className="theme-toggle-icon">
-          {theme === 'light' ? <FaSun /> : <FaMoon />}
-        </span>
+    <div className="theme-toggle" onClick={toggleDarkMode} title="Toggle Theme">
+      <div className={`icon-wrapper ${isDarkMode ? "dark" : "light"}`}>
+        {isDarkMode ? <FaMoon /> : <FaSun />}
       </div>
-    </button>
+    </div>
   );
 };
 
