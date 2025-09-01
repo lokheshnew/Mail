@@ -1,0 +1,755 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OAuth 2.0 Flow Demo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .content {
+            padding: 30px;
+        }
+        
+        .step {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            background: #fafafa;
+        }
+        
+        .step.active {
+            border-color: #4facfe;
+            background: #f0f9ff;
+        }
+        
+        .step.completed {
+            border-color: #10b981;
+            background: #f0fdf4;
+        }
+        
+        .step-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .step-number {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: #6b7280;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            font-weight: bold;
+        }
+        
+        .step.active .step-number {
+            background: #4facfe;
+        }
+        
+        .step.completed .step-number {
+            background: #10b981;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #374151;
+        }
+        
+        input, textarea, select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+        
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: #4facfe;
+            box-shadow: 0 0 0 3px rgba(79, 172, 254, 0.1);
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .btn-primary {
+            background: #4facfe;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #2563eb;
+            transform: translateY(-1px);
+        }
+        
+        .btn-secondary {
+            background: #6b7280;
+            color: white;
+        }
+        
+        .btn-success {
+            background: #10b981;
+            color: white;
+        }
+        
+        .response-box {
+            margin-top: 15px;
+            padding: 15px;
+            background: #1f2937;
+            color: #f9fafb;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            white-space: pre-wrap;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .success {
+            border-left: 4px solid #10b981;
+            background: #f0fdf4;
+            color: #065f46;
+        }
+        
+        .error {
+            border-left: 4px solid #ef4444;
+            background: #fef2f2;
+            color: #991b1b;
+        }
+        
+        .flow-diagram {
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            gap: 20px;
+            align-items: center;
+            margin: 20px 0;
+            padding: 20px;
+            background: #f8fafc;
+            border-radius: 8px;
+        }
+        
+        .participant {
+            text-align: center;
+            padding: 15px;
+            background: white;
+            border-radius: 8px;
+            border: 2px solid #e5e7eb;
+        }
+        
+        .arrow {
+            font-size: 24px;
+            color: #4facfe;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        .token-info {
+            background: #fffbeb;
+            border: 1px solid #fbbf24;
+            border-radius: 6px;
+            padding: 15px;
+            margin: 10px 0;
+        }
+        
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔐 OAuth 2.0 Flow Demo</h1>
+            <p>Test your OAuth implementation step by step</p>
+        </div>
+        
+        <div class="content">
+            <!-- Step 1: Client Registration -->
+            <div class="step active" id="step1">
+                <div class="step-header">
+                    <div class="step-number">1</div>
+                    <h3>Client Registration</h3>
+                </div>
+                <p>First, register your application to get client credentials:</p>
+                
+                <div class="form-group">
+                    <label>Your OAuth Server Base URL:</label>
+                    <input type="text" id="serverUrl" value="http://localhost:5000" placeholder="http://localhost:5000">
+                </div>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                    <div class="form-group">
+                        <label>Application Name:</label>
+                        <input type="text" id="clientName" value="Demo App" placeholder="My Application">
+                    </div>
+                    <div class="form-group">
+                        <label>Website:</label>
+                        <input type="text" id="website" value="https://demoapp.com" placeholder="https://myapp.com">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>Redirect URIs (one per line):</label>
+                    <textarea id="redirectUris" rows="3" placeholder="https://myapp.com/callback&#10;http://localhost:3000/callback">https://demoapp.com/callback
+http://localhost:3000/callback</textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label>Description:</label>
+                    <input type="text" id="description" value="A demo application to test OAuth flow" placeholder="Application description">
+                </div>
+                
+                <button class="btn btn-primary" onclick="registerClient()">Register Client</button>
+                
+                <div id="clientResponse" class="response-box hidden"></div>
+            </div>
+
+            <!-- Step 2: Authorization URL Generation -->
+            <div class="step" id="step2">
+                <div class="step-header">
+                    <div class="step-number">2</div>
+                    <h3>Generate Authorization URL</h3>
+                </div>
+                <p>Generate the authorization URL that your app will redirect users to:</p>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                    <div class="form-group">
+                        <label>Client ID:</label>
+                        <input type="text" id="authClientId" placeholder="Will be populated after registration">
+                    </div>
+                    <div class="form-group">
+                        <label>Redirect URI:</label>
+                        <select id="authRedirectUri">
+                            <option value="">Select redirect URI</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                    <div class="form-group">
+                        <label>Scopes:</label>
+                        <input type="text" id="authScope" value="email profile" placeholder="email profile">
+                    </div>
+                    <div class="form-group">
+                        <label>State (CSRF protection):</label>
+                        <input type="text" id="authState" placeholder="Optional but recommended">
+                    </div>
+                </div>
+                
+                <button class="btn btn-primary" onclick="generateAuthUrl()">Generate Authorization URL</button>
+                
+                <div id="authUrlResponse" class="response-box hidden"></div>
+            </div>
+
+            <!-- Step 3: User Authorization Simulation -->
+            <div class="step" id="step3">
+                <div class="step-header">
+                    <div class="step-number">3</div>
+                    <h3>User Authorization (Simulation)</h3>
+                </div>
+                <p>This simulates what happens when user visits the authorization URL:</p>
+                
+                <div class="flow-diagram">
+                    <div class="participant">
+                        <h4>👤 User</h4>
+                        <p>Clicks "Sign in"</p>
+                    </div>
+                    <div class="arrow">→</div>
+                    <div class="participant">
+                        <h4>🏢 Your OAuth Server</h4>
+                        <p>Shows login page</p>
+                    </div>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                    <div class="form-group">
+                        <label>User Email:</label>
+                        <input type="email" id="userEmail" placeholder="test@example.com">
+                    </div>
+                    <div class="form-group">
+                        <label>User Password:</label>
+                        <input type="password" id="userPassword" placeholder="user password">
+                    </div>
+                </div>
+                
+                <button class="btn btn-primary" onclick="simulateUserAuth()">Simulate User Login & Authorization</button>
+                
+                <div id="authCodeResponse" class="response-box hidden"></div>
+            </div>
+
+            <!-- Step 4: Token Exchange -->
+            <div class="step" id="step4">
+                <div class="step-header">
+                    <div class="step-number">4</div>
+                    <h3>Token Exchange</h3>
+                </div>
+                <p>Exchange the authorization code for access tokens:</p>
+                
+                <div class="token-info">
+                    <strong>⚠️ Important:</strong> This step happens server-to-server in your client application, not in the browser!
+                </div>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                    <div class="form-group">
+                        <label>Authorization Code:</label>
+                        <input type="text" id="authCode" placeholder="Will be populated from step 3">
+                    </div>
+                    <div class="form-group">
+                        <label>Client Secret:</label>
+                        <input type="text" id="clientSecret" placeholder="Will be populated from step 1">
+                    </div>
+                </div>
+                
+                <button class="btn btn-success" onclick="exchangeToken()">Exchange Code for Tokens</button>
+                
+                <div id="tokenResponse" class="response-box hidden"></div>
+            </div>
+
+            <!-- Step 5: API Usage -->
+            <div class="step" id="step5">
+                <div class="step-header">
+                    <div class="step-number">5</div>
+                    <h3>Use Access Token</h3>
+                </div>
+                <p>Make API calls using the access token:</p>
+                
+                <div class="form-group">
+                    <label>Access Token:</label>
+                    <input type="text" id="accessToken" placeholder="Will be populated from step 4">
+                </div>
+                
+                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                    <button class="btn btn-primary" onclick="getUserInfo()">Get User Info</button>
+                    <button class="btn btn-secondary" onclick="introspectToken()">Introspect Token</button>
+                    <button class="btn btn-secondary" onclick="revokeToken()">Revoke Token</button>
+                </div>
+                
+                <div id="apiResponse" class="response-box hidden"></div>
+            </div>
+
+            <!-- Step 6: Token Refresh -->
+            <div class="step" id="step6">
+                <div class="step-header">
+                    <div class="step-number">6</div>
+                    <h3>Token Refresh</h3>
+                </div>
+                <p>Refresh the access token when it expires:</p>
+                
+                <div class="form-group">
+                    <label>Refresh Token:</label>
+                    <input type="text" id="refreshToken" placeholder="Will be populated from step 4">
+                </div>
+                
+                <button class="btn btn-primary" onclick="refreshAccessToken()">Refresh Access Token</button>
+                
+                <div id="refreshResponse" class="response-box hidden"></div>
+            </div>
+
+            <!-- Testing Instructions -->
+            <div class="step">
+                <div class="step-header">
+                    <div class="step-number">ℹ️</div>
+                    <h3>Testing Instructions</h3>
+                </div>
+                <div style="background: #e0f2fe; padding: 15px; border-radius: 6px;">
+                    <h4>Before Testing:</h4>
+                    <ol style="margin-left: 20px; margin-top: 10px;">
+                        <li>Make sure your Flask application is running</li>
+                        <li>Update the "OAuth Server Base URL" if different from localhost:5000</li>
+                        <li>Ensure you have test user credentials in your database</li>
+                        <li>Check that CORS is enabled for cross-origin requests</li>
+                    </ol>
+                    
+                    <h4 style="margin-top: 15px;">Flow Summary:</h4>
+                    <p style="margin-top: 5px;">
+                        <strong>Registration</strong> → <strong>Auth URL</strong> → <strong>User Login</strong> → 
+                        <strong>Code Exchange</strong> → <strong>API Calls</strong> → <strong>Token Refresh</strong>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentStep = 1;
+        let clientData = {};
+        let authData = {};
+        let tokenData = {};
+
+        function updateStep(stepNumber) {
+            // Reset all steps
+            for (let i = 1; i <= 6; i++) {
+                const step = document.getElementById(`step${i}`);
+                step.classList.remove('active', 'completed');
+                if (i < stepNumber) {
+                    step.classList.add('completed');
+                } else if (i === stepNumber) {
+                    step.classList.add('active');
+                }
+            }
+            currentStep = stepNumber;
+        }
+
+        function showResponse(elementId, data, isError = false) {
+            const element = document.getElementById(elementId);
+            element.classList.remove('hidden');
+            element.className = `response-box ${isError ? 'error' : 'success'}`;
+            element.textContent = JSON.stringify(data, null, 2);
+        }
+
+        async function makeRequest(url, options = {}) {
+            try {
+                const response = await fetch(url, {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...options.headers
+                    },
+                    ...options
+                });
+                
+                const data = await response.json();
+                return { data, status: response.status, ok: response.ok };
+            } catch (error) {
+                return { 
+                    data: { error: 'Network error', message: error.message }, 
+                    status: 0, 
+                    ok: false 
+                };
+            }
+        }
+
+        async function registerClient() {
+            const serverUrl = document.getElementById('serverUrl').value.trim();
+            const clientName = document.getElementById('clientName').value.trim();
+            const website = document.getElementById('website').value.trim();
+            const description = document.getElementById('description').value.trim();
+            const redirectUrisText = document.getElementById('redirectUris').value.trim();
+            
+            if (!serverUrl || !clientName || !redirectUrisText) {
+                alert('Please fill in all required fields');
+                return;
+            }
+            
+            const redirectUris = redirectUrisText.split('\n').map(uri => uri.trim()).filter(uri => uri);
+            
+            const requestData = {
+                client_name: clientName,
+                redirect_uris: redirectUris,
+                description: description,
+                website: website,
+                scopes: ['email', 'profile', 'read']
+            };
+
+            const result = await makeRequest(`${serverUrl}/oauth/register_client`, {
+                method: 'POST',
+                body: JSON.stringify(requestData)
+            });
+
+            showResponse('clientResponse', result.data, !result.ok);
+
+            if (result.ok) {
+                clientData = result.data;
+                
+                // Populate next step fields
+                document.getElementById('authClientId').value = clientData.client_id;
+                document.getElementById('clientSecret').value = clientData.client_secret;
+                
+                // Populate redirect URI dropdown
+                const select = document.getElementById('authRedirectUri');
+                select.innerHTML = '<option value="">Select redirect URI</option>';
+                redirectUris.forEach(uri => {
+                    const option = document.createElement('option');
+                    option.value = uri;
+                    option.textContent = uri;
+                    select.appendChild(option);
+                });
+                
+                updateStep(2);
+            }
+        }
+
+        function generateAuthUrl() {
+            const serverUrl = document.getElementById('serverUrl').value.trim();
+            const clientId = document.getElementById('authClientId').value.trim();
+            const redirectUri = document.getElementById('authRedirectUri').value;
+            const scope = document.getElementById('authScope').value.trim();
+            const state = document.getElementById('authState').value.trim() || generateRandomState();
+            
+            if (!clientId || !redirectUri) {
+                alert('Client ID and Redirect URI are required');
+                return;
+            }
+            
+            // Update state field
+            document.getElementById('authState').value = state;
+            
+            const authUrl = `${serverUrl}/oauth/authorize?` + new URLSearchParams({
+                response_type: 'code',
+                client_id: clientId,
+                redirect_uri: redirectUri,
+                scope: scope,
+                state: state
+            }).toString();
+            
+            authData = { clientId, redirectUri, scope, state };
+            
+            const response = {
+                authorization_url: authUrl,
+                instructions: "In a real app, you would redirect the user to this URL",
+                next_step: "User will be redirected to your OAuth server for authentication"
+            };
+            
+            showResponse('authUrlResponse', response);
+            updateStep(3);
+        }
+
+        async function simulateUserAuth() {
+            const serverUrl = document.getElementById('serverUrl').value.trim();
+            const email = document.getElementById('userEmail').value.trim();
+            const password = document.getElementById('userPassword').value.trim();
+            
+            if (!email || !password) {
+                alert('Please enter user credentials');
+                return;
+            }
+            
+            // This simulates the POST request that happens when user submits the auth form
+            const formData = new FormData();
+            formData.append('action', 'authorize');
+            formData.append('client_id', authData.clientId);
+            formData.append('redirect_uri', authData.redirectUri);
+            formData.append('scope', authData.scope);
+            formData.append('state', authData.state);
+            formData.append('email', email);
+            formData.append('password', password);
+            
+            try {
+                const response = await fetch(`${serverUrl}/oauth/authorize`, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                if (response.redirected) {
+                    // Parse the redirect URL to extract the authorization code
+                    const redirectUrl = new URL(response.url);
+                    const code = redirectUrl.searchParams.get('code');
+                    const error = redirectUrl.searchParams.get('error');
+                    const returnedState = redirectUrl.searchParams.get('state');
+                    
+                    if (error) {
+                        showResponse('authCodeResponse', {
+                            error: error,
+                            error_description: redirectUrl.searchParams.get('error_description'),
+                            redirect_url: response.url
+                        }, true);
+                    } else if (code) {
+                        const responseData = {
+                            authorization_code: code,
+                            state: returnedState,
+                            redirect_url: response.url,
+                            success: true,
+                            next_step: "Exchange this code for access tokens"
+                        };
+                        
+                        showResponse('authCodeResponse', responseData);
+                        
+                        // Populate token exchange step
+                        document.getElementById('authCode').value = code;
+                        
+                        updateStep(4);
+                    }
+                } else {
+                    const data = await response.json();
+                    showResponse('authCodeResponse', data, true);
+                }
+            } catch (error) {
+                showResponse('authCodeResponse', { 
+                    error: 'Network error', 
+                    message: error.message 
+                }, true);
+            }
+        }
+
+        async function exchangeToken() {
+            const serverUrl = document.getElementById('serverUrl').value.trim();
+            const code = document.getElementById('authCode').value.trim();
+            const clientSecret = document.getElementById('clientSecret').value.trim();
+            
+            if (!code || !clientSecret) {
+                alert('Authorization code and client secret are required');
+                return;
+            }
+            
+            const requestData = {
+                grant_type: 'authorization_code',
+                code: code,
+                client_id: authData.clientId,
+                client_secret: clientSecret,
+                redirect_uri: authData.redirectUri
+            };
+
+            const result = await makeRequest(`${serverUrl}/oauth/token`, {
+                method: 'POST',
+                body: JSON.stringify(requestData)
+            });
+
+            showResponse('tokenResponse', result.data, !result.ok);
+
+            if (result.ok) {
+                tokenData = result.data;
+                
+                // Populate next steps
+                document.getElementById('accessToken').value = tokenData.access_token;
+                document.getElementById('refreshToken').value = tokenData.refresh_token;
+                
+                updateStep(5);
+            }
+        }
+
+        async function getUserInfo() {
+            const serverUrl = document.getElementById('serverUrl').value.trim();
+            const accessToken = document.getElementById('accessToken').value.trim();
+            
+            if (!accessToken) {
+                alert('Access token is required');
+                return;
+            }
+
+            const result = await makeRequest(`${serverUrl}/oauth/userinfo`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${accessToken}`
+                }
+            });
+
+            showResponse('apiResponse', result.data, !result.ok);
+        }
+
+        async function introspectToken() {
+            const serverUrl = document.getElementById('serverUrl').value.trim();
+            const accessToken = document.getElementById('accessToken').value.trim();
+            
+            const requestData = {
+                token: accessToken,
+                token_type_hint: 'access_token',
+                client_id: clientData.client_id,
+                client_secret: clientData.client_secret
+            };
+
+            const result = await makeRequest(`${serverUrl}/oauth/introspect`, {
+                method: 'POST',
+                body: JSON.stringify(requestData)
+            });
+
+            showResponse('apiResponse', result.data, !result.ok);
+        }
+
+        async function revokeToken() {
+            const serverUrl = document.getElementById('serverUrl').value.trim();
+            const accessToken = document.getElementById('accessToken').value.trim();
+            
+            const requestData = {
+                token: accessToken,
+                token_type_hint: 'access_token',
+                client_id: clientData.client_id,
+                client_secret: clientData.client_secret
+            };
+
+            const result = await makeRequest(`${serverUrl}/oauth/revoke`, {
+                method: 'POST',
+                body: JSON.stringify(requestData)
+            });
+
+            showResponse('apiResponse', result.data, !result.ok);
+        }
+
+        async function refreshAccessToken() {
+            const serverUrl = document.getElementById('serverUrl').value.trim();
+            const refreshToken = document.getElementById('refreshToken').value.trim();
+            
+            if (!refreshToken) {
+                alert('Refresh token is required');
+                return;
+            }
+
+            const requestData = {
+                grant_type: 'refresh_token',
+                refresh_token: refreshToken,
+                client_id: clientData.client_id,
+                client_secret: clientData.client_secret
+            };
+
+            const result = await makeRequest(`${serverUrl}/oauth/refresh`, {
+                method: 'POST',
+                body: JSON.stringify(requestData)
+            });
+
+            showResponse('refreshResponse', result.data, !result.ok);
+
+            if (result.ok) {
+                // Update tokens
+                document.getElementById('accessToken').value = result.data.access_token;
+                document.getElementById('refreshToken').value = result.data.refresh_token;
+                updateStep(6);
+            }
+        }
+
+        function generateRandomState() {
+            return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+        }
+
+        // Initialize
+        document.getElementById('authState').value = generateRandomState();
+    </script>
+</body>
+</html>
