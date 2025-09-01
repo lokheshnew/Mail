@@ -1,5 +1,3 @@
-# routes/service_routes.py - Fixed syntax error around line 491
-
 from flask import Blueprint, request, jsonify
 from models.user import load_users, is_supported_email, authenticate_user, get_client_secret
 from models.company import get_company_by_domain
@@ -13,65 +11,43 @@ import json
 
 service_bp = Blueprint('service', __name__)
 
-# Initialize encryption service
 encryption_service = EncryptionService()
 
-# API Key validation
 def validate_api_key():
-    """Validate API key from request headers"""
     api_key = request.headers.get('X-API-KEY')
-    
     if not api_key or api_key != API_KEY:
         return False, "Invalid or missing API key"
-    
     return True, None
 
 def get_client_secret_from_request():
-    """Get client-specific secret from headers with user lookup"""
-    # Try to get from header first
     client_secret = request.headers.get('X-CLIENT-SECRET')
-    
     if client_secret:
         return client_secret
-    
-    # Try to get from user identification
     user_email = request.headers.get('X-USER-EMAIL')
     if user_email:
         return get_client_secret(user_email)
-    
     return None
 
 def is_encrypted_request():
-    """Check if request contains encrypted data"""
     data = request.get_json()
     return data and 'encrypted_data' in data
 
 def authenticate_api_user(email=None):
-    """Authenticate user for API access and get their client secret"""
     if not email:
-        # Try to get from headers
         email = request.headers.get('X-USER-EMAIL')
-    
     if not email:
         return None, None, "User email required for API access"
-    
-    # Validate user exists and is active
     users = load_users()
     if email not in users:
         return None, None, "User not found"
-    
     user_data = users[email]
     if user_data.get('status') != 'active':
         return None, None, "User account is inactive"
-    
-    # Get client secret
     client_secret = get_client_secret(email)
     if not client_secret:
         return None, None, "Client secret not available for user"
     
     return user_data, client_secret, None
-
-# ========== ENHANCED VERIFY EMAIL API ==========
 
 @service_bp.route('/verify_email', methods=['POST'])
 def verify_email_enhanced():
@@ -221,13 +197,13 @@ def send_email_enhanced():
     """
     try:
         # Validate API key (required for all send_email requests)
+        
         valid, error = validate_api_key()
         if not valid:
             return jsonify({'error': error}), 401
         
         data = request.get_json()
         client_secret = None
-        
         # Check if this is an encrypted request
         if is_encrypted_request():
             # Get user email for client secret lookup
@@ -833,6 +809,11 @@ def bulk_send_email():
         print(f"Bulk send error: {e}")
         return jsonify(error_response), 500
 
+@service_bp.route('/cache/stats')
+def cache_stats():
+    from utils.json_cache import get_cache_instance
+    cache = get_cache_instance()
+    return jsonify(cache.get_cache_stats())
 
 @service_bp.route('/bulk_verify_emails', methods=['POST'])
 def bulk_verify_emails():
