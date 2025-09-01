@@ -290,13 +290,33 @@ const EmailList = ({
 
   const getEmptyStateConfig = () => {
     const configs = {
-      sent: { icon: "📫", text: "No sent emails" },
-      trash: { icon: "🗑️", text: "Trash is empty" },
-      drafts: { icon: "📝", text: "No drafts" },
-      scheduled: { icon: "📋", text: "No scheduled emails" },
+      sent: {
+        icon: "📫",
+        text:
+          searchQuery && !isSearching ? "No results found" : "No sent mails",
+      },
+      trash: {
+        icon: "🗑️",
+        text:
+          searchQuery && !isSearching ? "No results found" : "Trash is empty",
+      },
+      drafts: {
+        icon: "📝",
+        text: searchQuery && !isSearching ? "No results found" : "No drafts",
+      },
+      scheduled: {
+        icon: "📋",
+        text:
+          searchQuery && !isSearching
+            ? "No results found"
+            : "No scheduled emails",
+      },
       default: {
         icon: "📫",
-        text: isSearching ? "No search results" : "Your inbox is empty",
+        text:
+          searchQuery && !isSearching
+            ? "No results found"
+            : "Your inbox is empty",
       },
     };
 
@@ -325,33 +345,35 @@ const EmailList = ({
           {isSearching && <p>Try adjusting your search terms</p>}
         </div>
       ) : (
-        emails.map((mail, index) => (
-          <EmailItem
-            key={`${mail.from}-${mail.to}-${mail.subject}-${index}`}
-            mail={mail}
-            index={index}
-            activeTab={activeTab}
-            isSelected={selectedEmail === index}
-            isChecked={isEmailSelected(mail)}
-            onSelect={() =>
-              onSelectEmail(selectedEmail === index ? null : index)
-            }
-            onCheck={(isChecked) => handleEmailSelect(mail, isChecked)}
-            onMarkAsRead={() => handleMarkAsRead(mail)}
-            onMarkAsUnread={() => handleMarkAsUnread(mail)}
-            onMoveToTrash={() => handleMoveToTrash(mail)}
-            onPermanentDelete={() => handlePermanentDelete(mail)}
-            onRestore={() => handleRestoreEmail(mail)}
-            onEditDraft={() => {
-              onEditDraft(mail);
-              onShowCompose(true);
-            }}
-            onDeleteDraft={() => handleDeleteDraft(mail)}
-            onDeleteScheduled={() => handleDeleteScheduled(mail)}
-            isDarkMode={isDarkMode}
-            toggleDarkMode={toggleDarkMode}
-          />
-        ))
+        [...emails] // create a copy so original array is not mutated
+          .sort((a, b) => new Date(b.date_of_send) - new Date(a.date_of_send)) // sort descending
+          .map((mail, index) => (
+            <EmailItem
+              key={`${mail.from}-${mail.to}-${mail.subject}-${index}`}
+              mail={mail}
+              index={index}
+              activeTab={activeTab}
+              isSelected={selectedEmail === index}
+              isChecked={isEmailSelected(mail)}
+              onSelect={() =>
+                onSelectEmail(selectedEmail === index ? null : index)
+              }
+              onCheck={(isChecked) => handleEmailSelect(mail, isChecked)}
+              onMarkAsRead={() => handleMarkAsRead(mail)}
+              onMarkAsUnread={() => handleMarkAsUnread(mail)}
+              onMoveToTrash={() => handleMoveToTrash(mail)}
+              onPermanentDelete={() => handlePermanentDelete(mail)}
+              onRestore={() => handleRestoreEmail(mail)}
+              onEditDraft={() => {
+                onEditDraft(mail);
+                onShowCompose(true);
+              }}
+              onDeleteDraft={() => handleDeleteDraft(mail)}
+              onDeleteScheduled={() => handleDeleteScheduled(mail)}
+              isDarkMode={isDarkMode}
+              toggleDarkMode={toggleDarkMode}
+            />
+          ))
       )}
     </div>
   );

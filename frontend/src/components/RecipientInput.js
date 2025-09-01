@@ -9,15 +9,16 @@ const RecipientInput = ({ recipient, onRecipientChange, token }) => {
 
   const fetchRecipients = async () => {
     if (!token) return;
-    
+
     setIsLoading(true);
     try {
       const res = await fetch(`${API_BASE_URL}/mail/recipients`, {
         headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
       });
+
       const data = await res.json();
       setKnownRecipients(data.recipients || []);
     } catch (err) {
@@ -70,11 +71,13 @@ const RecipientInput = ({ recipient, onRecipientChange, token }) => {
   };
 
   const handleKeyDown = (e) => {
-    if (e.key === 'Escape') {
+    if (e.key === "Escape") {
       setShowSuggestions(false);
       setSuggestions([]);
     }
   };
+
+  const noMatch = recipient.trim() && suggestions.length === 0 && !isLoading;
 
   return (
     <div className="form-row">
@@ -91,25 +94,33 @@ const RecipientInput = ({ recipient, onRecipientChange, token }) => {
           required
           maxLength={100}
         />
-        
-        {showSuggestions && suggestions.length > 0 && (
+
+        {showSuggestions && isLoading && (
+          <div className="suggestions-dropdown animate-slideDown">
+            <li style={{ color: "#9aa0a6", fontStyle: "italic" }}>
+              <span className="loading-spinner"></span> Loading recipients...
+            </li>
+          </div>
+        )}
+
+        {showSuggestions && !isLoading && suggestions.length > 0 && (
           <ul className="suggestions-dropdown animate-slideDown">
             {suggestions.map((email, idx) => (
               <li
                 key={idx}
                 onClick={() => handleSuggestionClick(email)}
-                onMouseDown={(e) => e.preventDefault()} // Prevent blur when clicking
+                onMouseDown={(e) => e.preventDefault()}
               >
                 📧 {email}
               </li>
             ))}
           </ul>
         )}
-        
-        {showSuggestions && isLoading && (
+
+        {showSuggestions && noMatch && (
           <div className="suggestions-dropdown animate-slideDown">
-            <li style={{ color: '#9aa0a6', fontStyle: 'italic' }}>
-              <span className="loading-spinner"></span> Loading recipients...
+            <li style={{ color: "#ff4d4f", fontStyle: "italic" }}>
+              ❌ Email address not found
             </li>
           </div>
         )}

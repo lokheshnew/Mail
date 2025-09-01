@@ -1,499 +1,204 @@
-/* Modern Companies List Styles */
+/* --- Layout --- */
 .companies-layout {
-  min-height: 100vh;
-  background: var(--bg-secondary);
-  position: relative;
-  overflow: hidden;
-}
-
-.companies-layout::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23000000' fill-opacity='0.02'%3E%3Ccircle cx='30' cy='30' r='4'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E") repeat;
-  animation: float 20s ease-in-out infinite;
-}
-
-.companies-container {
-  max-width: 1400px;
-  margin: 0 auto;
-  padding: var(--space-8) var(--space-6);
-  min-height: 100vh;
-  position: relative;
-  z-index: 1;
-}
-
-.companies-header {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: var(--space-8);
-  background: var(--bg-primary);
-  padding: var(--space-8) var(--space-10);
-  border-radius: var(--radius-2xl);
-  box-shadow: var(--shadow-xl);
-  border: 1px solid var(--border-primary);
+  flex-direction: column;
+  min-height: 100vh;
+  padding: 20px;
+  font-family: "Segoe UI", sans-serif;
+  color: #f8fafc; /* light text for bg */
+}
+
+/* Dark overlay to make text more readable on bg */
+.companies-layout::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  z-index: 0;
+}
+
+.companies-container,
+.back-navigation,
+.companies-header {
   position: relative;
-  overflow: hidden;
+  z-index: 1; /* keep above overlay */
 }
 
-.companies-header::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 6px;
-  background: linear-gradient(90deg, var(--primary-500), var(--primary-600), var(--primary-700));
+/* --- Back button --- */
+.back-button {
+  display: inline-block;
+  padding: 10px 12px;
+  border-radius: 6px;
+  background: rgba(59, 130, 246, 0.15); /* semi-transparent blue */
+  -webkit-backdrop-filter: blur(8px); /* ✅ Safari support */
+  backdrop-filter: blur(8px);
+  color: #e0f2fe;
+  font-size: 14px;
+  font-weight: 500;
+  text-decoration: none;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+  box-shadow: 0 2px 6px rgba(37, 99, 235, 0.25);
 }
 
+.back-button:hover {
+  background: rgba(59, 130, 246, 0.3);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4);
+}
+
+/* --- Header --- */
 .companies-header h1 {
-  color: var(--text-primary);
-  margin: 0;
-  font-size: 2.25rem;
-  font-weight: 800;
-  background: linear-gradient(135deg, var(--primary-600), var(--primary-700));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  font-size: 24px;
+  font-weight: 700;
+  color: #e0f2fe;
 }
 
 .add-company-button {
   display: flex;
   align-items: center;
-  gap: var(--space-2);
-  background: linear-gradient(135deg, var(--primary-600), var(--primary-700));
-  color: var(--text-inverse);
+  gap: 6px;
+  background: linear-gradient(135deg, #3b82f6, #1e3a8a);
+  color: #fff;
   text-decoration: none;
-  padding: var(--space-4) var(--space-6);
-  border-radius: var(--radius-xl);
-  font-weight: 700;
-  transition: all var(--transition-normal);
-  box-shadow: var(--shadow-md);
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-weight: 600;
+  box-shadow: 0 4px 12px rgba(30, 64, 175, 0.4);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
   position: relative;
   overflow: hidden;
-}
-
-.add-company-button::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(45deg, transparent 30%, rgba(255,255,255,0.2) 50%, transparent 70%);
-  transform: translateX(-100%);
-  transition: transform 0.6s;
-}
-
-.add-company-button:hover::before {
-  transform: translateX(100%);
 }
 
 .add-company-button:hover {
-  background: linear-gradient(135deg, var(--primary-700), var(--primary-800));
   transform: translateY(-2px);
-  box-shadow: var(--shadow-xl);
+  box-shadow: 0 6px 18px rgba(30, 64, 175, 0.6);
 }
 
-/* Companies Grid */
+/* --- Companies Grid --- */
 .companies-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
-  gap: var(--space-8);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  justify-content: flex-start;
+  margin-top: 15px;
 }
 
+/* --- Glassmorphic Card --- */
 .company-card {
-  background: var(--bg-primary);
-  border-radius: var(--radius-2xl);
-  overflow: hidden;
-  transition: all var(--transition-normal);
+  flex: 0 0 280px;
+  border-radius: 14px;
+  padding: 16px;
+  background: rgba(59, 130, 246, 0.15); /* translucent blue */
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(12px);
+  color: #f1f5f9;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
   cursor: pointer;
-  border: 1px solid var(--border-primary);
-  box-shadow: var(--shadow-md);
-  position: relative;
-}
-
-.company-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 4px;
-  background: linear-gradient(90deg, var(--primary-500), var(--primary-600));
-  transform: scaleX(0);
-  transition: transform var(--transition-normal);
-}
-
-.company-card:hover::before {
-  transform: scaleX(1);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .company-card:hover {
-  transform: translateY(-8px);
-  box-shadow: var(--shadow-xl);
-  border-color: var(--border-accent);
+  transform: translateY(-6px);
+  box-shadow: 0 6px 16px rgba(37, 99, 235, 0.5);
+  background: rgba(59, 130, 246, 0.25);
 }
 
-.company-card.inactive {
-  opacity: 0.7;
-}
-
-.company-card.inactive:hover {
-  opacity: 0.9;
-}
-
+/* --- Card Header --- */
 .company-header {
-  padding: var(--space-8) var(--space-6) var(--space-6);
-  background: var(--bg-secondary);
-  border-bottom: 1px solid var(--border-primary);
   display: flex;
   justify-content: space-between;
   align-items: center;
+  margin-bottom: 12px;
 }
 
 .company-header h2 {
-  margin: 0;
-  font-size: 1.375rem;
-  color: var(--text-primary);
-  font-weight: 700;
+  font-size: 18px;
+  font-weight: 600;
+  color: #e0f2fe;
 }
 
 .status-indicator {
-  width: 16px;
-  height: 16px;
-  border-radius: var(--radius-full);
-  position: relative;
-}
-
-.status-indicator::before {
-  content: '';
-  position: absolute;
-  inset: -4px;
-  border-radius: var(--radius-full);
-  padding: 4px;
-  background: linear-gradient(45deg, transparent, currentColor, transparent);
-  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  mask-composite: xor;
-  animation: pulse 2s infinite;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
 }
 
 .status-indicator.active {
-  background: var(--success-500);
-  color: var(--success-500);
-  box-shadow: 0 0 0 3px var(--success-200);
+  background: #22c55e;
 }
 
 .status-indicator.inactive {
-  background: var(--error-500);
-  color: var(--error-500);
-  box-shadow: 0 0 0 3px var(--error-200);
+  background: #ef4444;
 }
 
-[data-theme="dark"] .status-indicator.active {
-  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.3);
-}
-
-[data-theme="dark"] .status-indicator.inactive {
-  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.3);
-}
-
+/* --- Info --- */
 .company-info {
-  padding: var(--space-6);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 14px;
+  color: #dbeafe;
 }
 
 .info-item {
   display: flex;
   align-items: center;
-  margin-bottom: var(--space-4);
-  padding: var(--space-3);
-  background: var(--bg-secondary);
-  border-radius: var(--radius-lg);
-  transition: all var(--transition-fast);
-}
-
-.info-item:last-child {
-  margin-bottom: 0;
-}
-
-.info-item:hover {
-  background: var(--bg-tertiary);
-  transform: translateX(4px);
+  gap: 6px;
 }
 
 .info-icon {
-  color: var(--primary-600);
-  margin-right: var(--space-3);
-  min-width: 20px;
-  font-size: 1.125rem;
+  color: #93c5fd;
+  font-size: 14px;
 }
 
-.info-item p {
-  margin: 0;
-  color: var(--text-primary);
-  font-weight: 600;
-  font-size: 0.875rem;
-}
-
-.company-actions {
-  padding: var(--space-6);
-  background: var(--bg-secondary);
-  border-top: 1px solid var(--border-primary);
-  text-align: right;
-}
-
-.login-button {
-  background: linear-gradient(135deg, var(--primary-600), var(--primary-700));
-  color: var(--text-inverse);
-  border: none;
-  padding: var(--space-3) var(--space-6);
-  border-radius: var(--radius-lg);
-  cursor: pointer;
-  font-size: 0.875rem;
-  font-weight: 700;
-  transition: all var(--transition-normal);
-  text-transform: uppercase;
-  letter-spacing: 0.025em;
-}
-
-.login-button:hover {
-  background: linear-gradient(135deg, var(--primary-700), var(--primary-800));
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-lg);
-}
-
-/* No companies state */
+/* --- Empty State --- */
 .no-companies {
-  grid-column: 1 / -1;
+  flex: 1;
   text-align: center;
-  padding: var(--space-20) var(--space-6);
-  background: var(--bg-primary);
-  border-radius: var(--radius-2xl);
-  box-shadow: var(--shadow-md);
-  border: 1px solid var(--border-primary);
-  animation: fadeIn 0.6s ease-out;
-}
-
-.no-companies .icon {
-  font-size: 6rem;
-  color: var(--text-tertiary);
-  margin-bottom: var(--space-8);
-  display: block;
-  opacity: 0.5;
+  padding: 40px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.15);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(10px);
+  color: #f8fafc;
 }
 
 .no-companies h2 {
-  margin: 0 0 var(--space-4);
-  color: var(--text-primary);
-  font-size: 1.875rem;
-  font-weight: 700;
-}
-
-.no-companies p {
-  margin: 0 0 var(--space-8);
-  color: var(--text-secondary);
-  font-size: 1.125rem;
-  line-height: 1.6;
+  margin: 12px 0;
+  font-size: 20px;
+  color: #bfdbfe;
 }
 
 .register-button {
   display: inline-block;
-  background: linear-gradient(135deg, var(--primary-600), var(--primary-700));
-  color: var(--text-inverse);
+  margin-top: 15px;
+  padding: 10px 16px;
+  background: linear-gradient(135deg, #3b82f6, #1e40af);
+  color: #fff;
+  border-radius: 8px;
   text-decoration: none;
-  padding: var(--space-5) var(--space-10);
-  border-radius: var(--radius-xl);
-  font-weight: 700;
-  font-size: 1.125rem;
-  transition: all var(--transition-normal);
-  box-shadow: var(--shadow-lg);
+  font-weight: 600;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .register-button:hover {
-  background: linear-gradient(135deg, var(--primary-700), var(--primary-800));
-  transform: translateY(-3px);
-  box-shadow: var(--shadow-xl);
-}
-
-/* Loading state */
-.loading-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: var(--space-20) var(--space-6);
-  background: var(--bg-primary);
-  border-radius: var(--radius-2xl);
-  box-shadow: var(--shadow-md);
-  border: 1px solid var(--border-primary);
-  grid-column: 1 / -1;
-}
-
-.loading-spinner {
-  width: 60px;
-  height: 60px;
-  border: 6px solid var(--border-primary);
-  border-top: 6px solid var(--primary-600);
-  border-radius: var(--radius-full);
-  animation: spin 1s linear infinite;
-  margin-bottom: var(--space-6);
-}
-
-.loading-container p {
-  color: var(--text-secondary);
-  margin: 0;
-  font-size: 1.125rem;
-  font-weight: 600;
-}
-
-/* Navigation back button */
-.back-navigation {
-  position: fixed;
-  top: var(--space-8);
-  left: var(--space-8);
-  z-index: 1000;
-}
-
-.back-button {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  background: var(--bg-primary);
-  color: var(--text-primary);
-  text-decoration: none;
-  padding: var(--space-3) var(--space-5);
-  border-radius: var(--radius-xl);
-  font-weight: 600;
-  transition: all var(--transition-normal);
-  border: 1px solid var(--border-primary);
-  box-shadow: var(--shadow-md);
-  backdrop-filter: blur(10px);
-}
-
-.back-button:hover {
-  background: var(--bg-tertiary);
   transform: translateY(-2px);
-  box-shadow: var(--shadow-lg);
+  box-shadow: 0 6px 14px rgba(30, 64, 175, 0.6);
 }
 
-/* Responsive design */
-@media (max-width: 768px) {
-  .companies-container {
-    padding: var(--space-6) var(--space-4);
-  }
-  
-  .companies-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: var(--space-6);
-    padding: var(--space-6) var(--space-6);
-  }
-  
-  .companies-header h1 {
-    font-size: 1.875rem;
-  }
-  
-  .companies-grid {
-    grid-template-columns: 1fr;
-    gap: var(--space-6);
-  }
-  
-  .company-card {
-    margin: 0;
-  }
-  
-  .back-navigation {
-    top: var(--space-4);
-    left: var(--space-4);
-  }
-  
-  .back-button {
-    padding: var(--space-2) var(--space-4);
-    font-size: 0.875rem;
-  }
+/* --- Animations --- */
+.animate-fadeIn {
+  animation: fadeIn 0.5s ease forwards;
 }
 
-@media (max-width: 480px) {
-  .companies-container {
-    padding: var(--space-4) var(--space-3);
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
   }
-  
-  .companies-header {
-    padding: var(--space-5) var(--space-4);
-  }
-  
-  .companies-header h1 {
-    font-size: 1.5rem;
-  }
-  
-  .company-header,
-  .company-info,
-  .company-actions {
-    padding: var(--space-5);
-  }
-  
-  .no-companies {
-    padding: var(--space-16) var(--space-4);
-  }
-  
-  .no-companies .icon {
-    font-size: 4rem;
-  }
-  
-  .no-companies h2 {
-    font-size: 1.5rem;
-  }
-  
-  .add-company-button {
-    width: 100%;
-    justify-content: center;
-  }
-}
-
-/* Enhanced Animations */
-.company-card {
-  animation: fadeIn 0.6s ease-out;
-  animation-fill-mode: both;
-}
-
-.company-card:nth-child(1) { animation-delay: 0.1s; }
-.company-card:nth-child(2) { animation-delay: 0.2s; }
-.company-card:nth-child(3) { animation-delay: 0.3s; }
-.company-card:nth-child(4) { animation-delay: 0.4s; }
-.company-card:nth-child(5) { animation-delay: 0.5s; }
-.company-card:nth-child(6) { animation-delay: 0.6s; }
-
-/* Status Animation */
-@keyframes pulse {
-  0%, 100% {
+  to {
     opacity: 1;
-  }
-  50% {
-    opacity: 0.5;
-  }
-}
-
-.status-indicator.active::before {
-  animation: pulse 2s infinite;
-}
-
-/* Print Styles */
-@media print {
-  .back-navigation,
-  .add-company-button,
-  .company-actions {
-    display: none !important;
-  }
-  
-  .companies-container {
-    padding: 0;
-  }
-  
-  .company-card {
-    break-inside: avoid;
-    box-shadow: none;
-    border: 1px solid #ccc;
-  }
-  
-  .companies-grid {
-    gap: var(--space-4);
+    transform: translateY(0);
   }
 }
