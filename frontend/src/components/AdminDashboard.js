@@ -29,6 +29,16 @@ function AdminDashboard() {
   const [activeSection, setActiveSection] = useState("users");
   const [dataLoading, setDataLoading] = useState(false);
 
+  const [buttonText, setButtonText] = useState("Save Settings");
+
+  const handleSave = (e) => {
+    e.preventDefault(); // stop page reload
+    setButtonText("✅ Settings Saved");
+
+    // reset back after 2 sec (optional)
+    setTimeout(() => setButtonText("Save Settings"), 2000);
+  };
+
   // Broadcast mail modal states
   const [showBroadcastModal, setShowBroadcastModal] = useState(false);
   const [broadcastForm, setBroadcastForm] = useState({
@@ -339,7 +349,7 @@ function AdminDashboard() {
       };
 
       const response = await axios.post(
-        "http://10.96.232.159:5000/service/bulk_send",
+        "http://10.208.204.56:5000/service/bulk_send",
         payload,
         {
           headers: {
@@ -427,7 +437,10 @@ function AdminDashboard() {
                 <button className="add-user-btn" onClick={handleAddUser}>
                   Add New User
                 </button>
-                <button className="broadcast-btn" onClick={handleBroadcastClick}>
+                <button
+                  className="broadcast-btn"
+                  onClick={handleBroadcastClick}
+                >
                   <FaBroadcastTower /> Broadcast Mail
                 </button>
               </>
@@ -613,7 +626,7 @@ function AdminDashboard() {
           <div className="section-content">
             <div className="domain-settings">
               <h3>Domain Settings</h3>
-              <form className="settings-form">
+              <form className="settings-form" onSubmit={handleSave}>
                 <div className="form-group">
                   <label>Domain Name</label>
                   <input type="text" value={adminDomain} disabled />
@@ -634,7 +647,7 @@ function AdminDashboard() {
                   ></textarea>
                 </div>
                 <button type="submit" className="save-settings-btn">
-                  Save Settings
+                  {buttonText}
                 </button>
               </form>
             </div>

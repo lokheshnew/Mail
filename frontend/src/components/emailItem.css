@@ -116,15 +116,13 @@
 
 .email-attachment {
   margin-top: 12px;
+  border-radius: 8px;
 }
 
 .attachment-item {
   display: flex;
   align-items: center;
-  gap: 8px;
-  background: #ecefff;
-  padding: 8px 12px;
-  border-radius: 8px;
+  color: rgb(55, 106, 223);
 }
 
 .attachment-icon {
@@ -231,8 +229,8 @@
 }
 
 .email-item-wrapper.dark .email-attachment {
-  background: #2e3440;
-  padding: 0.5rem;
+  background: #1c1c4e !important;
+  /* padding: 0.5rem; */
   border-radius: 6px;
 }
 
@@ -251,12 +249,9 @@
 }
 
 .email-item-wrapper.dark .attachment-item {
+  color: rgb(221, 218, 218);
   display: flex;
   align-items: center;
-  gap: 8px;
-  background: #1e1e1f;
-  padding: 8px 12px;
-  border-radius: 8px;
 }
 
 .email-item-wrapper.unread {

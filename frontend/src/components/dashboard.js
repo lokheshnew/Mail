@@ -400,7 +400,7 @@ const Dashboard = () => {
       default:
         return (
           <EmailList
-            emails={getCurrentEmails()}
+            emails={searchQuery.trim() ? searchResults : getCurrentEmails()}
             activeTab={activeTab}
             selectedEmail={selectedEmail}
             selectedEmails={selectedEmails}
