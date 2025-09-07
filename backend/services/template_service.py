@@ -1,5 +1,5 @@
 from datetime import datetime
-from utils.file_helpers import read_mail_file, save_mail_file
+from utils.file_helpers import read_mail_collection, save_mail_collection
 from models.user import load_users
 
 class TemplateService:
@@ -9,8 +9,8 @@ class TemplateService:
         users = load_users()
         if email not in users:
             return None, "User not found"
-            
-        templates = read_mail_file(email, 'templates')
+
+        templates = read_mail_collection(email, 'templates')
         return templates, None
     
     @staticmethod
@@ -26,11 +26,11 @@ class TemplateService:
             'body': body,
             'created_at': datetime.now().isoformat()
         }
-        
-        templates = read_mail_file(email, 'templates')
+
+        templates = read_mail_collection(email, 'templates')
         templates.append(template)
-        
-        if save_mail_file(email, 'templates', templates):
+
+        if save_mail_collection(email, 'templates', templates):
             return True, None
         else:
             return False, "Failed to save template"
@@ -38,14 +38,14 @@ class TemplateService:
     @staticmethod
     def delete_template(email, template_name):
         """Delete a template"""
-        templates = read_mail_file(email, 'templates')
-        
+        templates = read_mail_collection(email, 'templates')
+
         updated_templates = [t for t in templates if t.get('name') != template_name]
         
         if len(templates) == len(updated_templates):
             return False, "Template not found"
-        
-        if save_mail_file(email, 'templates', updated_templates):
+
+        if save_mail_collection(email, 'templates', updated_templates):
             return True, None
         else:
             return False, "Failed to delete template"

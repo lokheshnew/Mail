@@ -1,12 +1,14 @@
 from flask import Blueprint, request, jsonify
 from models.user import register_user, authenticate_user, update_user_last_login, get_client_secret
 from utils.auth import generate_token, verify_token
+from config import db
+import datetime
 
 auth_bp = Blueprint('auth', __name__)
 
 @auth_bp.route('/register', methods=['POST'])
 def register():
-    """Register a new user with client secret generation"""
+    """Register a new user with MongoDB storage and client secret generation"""
     try:
         data = request.get_json()
         username = data.get('username')
@@ -16,12 +18,11 @@ def register():
         if not all([username, email, password]):
             return jsonify({'error': 'All fields are required'}), 400
         
-        # Register user
+        # Use your existing register_user() but backed by MongoDB
         user, error = register_user(username, email, password)
-        
         if error:
             return jsonify({'error': error}), 400
-        
+
         # Return user data including client secret for initial setup
         return jsonify({
             'message': 'User registered successfully',
@@ -32,12 +33,13 @@ def register():
                 'status': user.get('status'),
                 'created_at': user.get('created_at')
             },
-            'client_secret': user.get('client_secret'),  # Include client secret
+            'client_secret': user.get('client_secret'),
             'security_note': 'Store your client secret securely. It will be used for encrypted API calls.'
         }), 201
         
     except Exception as e:
         return jsonify({'error': f'Registration failed: {str(e)}'}), 500
+
 
 @auth_bp.route('/login', methods=['POST'])
 def login():

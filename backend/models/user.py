@@ -3,9 +3,17 @@ import hashlib
 import re
 import secrets
 import string
-from config import USERS_FILE, SUPPORTED_SERVICES
+from config import SUPPORTED_SERVICES, MONGO_URI, DB_NAME
 from utils.encryption import Encryption
-from datetime import datetime
+from datetime import datetime, timedelta
+from pymongo import MongoClient, ReturnDocument
+
+client = MongoClient(MONGO_URI)
+db = client[DB_NAME]
+users_col = db['users']
+
+print(">>> Importing models.user")
+
 
 def validate_email_format(email):
     """Validate email format"""
@@ -87,53 +95,37 @@ def get_user_id(username, password):
     return generate_user_id(username, password)
 
 def load_users():
-    """Load users from the users file with error handling"""
+    """Load all users from MongoDB as a dictionary keyed by email"""
     try:
-        if not USERS_FILE.exists():
-            # Create directory and file if they don't exist
-            USERS_FILE.parent.mkdir(parents=True, exist_ok=True)
-            with open(USERS_FILE, 'w', encoding='utf-8') as f:
-                json.dump({}, f)
-            return {}
-            
-        with open(USERS_FILE, 'r', encoding='utf-8') as f:
-            users = json.load(f)
-            
-        # Validate loaded data
-        if not isinstance(users, dict):
-            print("Warning: users.json contains invalid data, resetting")
-            return {}
-            
+        users = {}
+        cursor = users_col.find({})
+        for doc in cursor:
+            email = doc.get("email")
+            if email:
+                users[email] = doc
         return users
-        
-    except json.JSONDecodeError as e:
-        print(f"Error: Invalid JSON in users.json: {e}")
-        return {}
     except Exception as e:
-        print(f"Error loading users: {e}")
+        print(f"❌ Error loading users from MongoDB: {e}")
         return {}
 
 def save_users(users):
-    """Save users to the users file with atomic write"""
+    """Save users into MongoDB with upsert (keep same API as old JSON version)"""
     try:
-        # Validate input
         if not isinstance(users, dict):
             raise ValueError("Users data must be a dictionary")
-            
-        # Ensure directory exists
-        USERS_FILE.parent.mkdir(parents=True, exist_ok=True)
-        
-        # Write atomically (write to temp file first)
-        temp_file = USERS_FILE.with_suffix('.tmp')
-        with open(temp_file, 'w', encoding='utf-8') as f:
-            json.dump(users, f, indent=2, ensure_ascii=False)
-        
-        # Replace original file
-        temp_file.replace(USERS_FILE)
+
+        for email, user_data in users.items():
+            if not isinstance(user_data, dict):
+                continue
+            users_col.update_one(
+                {"email": email},       # match by email
+                {"$set": user_data},    # replace/update fields
+                upsert=True             # insert if not exists
+            )
         return True
-        
+
     except Exception as e:
-        print(f"Error saving users: {e}")
+        print(f"❌ Error saving users to MongoDB: {e}")
         return False
 
 def is_supported_email(email):
@@ -161,6 +153,9 @@ def is_supported_email(email):
         return False
 
 def register_user(username, email, password):
+
+    print(">>> Defining register_user")
+
     """Register a new user with comprehensive validation and client secret generation"""
     try:
         # Validate inputs
@@ -205,30 +200,27 @@ def register_user(username, email, password):
         encrypted_client_secret = encryption.encrypt(client_secret)
         
         # Add new user with client secret
-        users[email] = {
+        user_doc = {
             "user_id": user_id,
             "username": username,
             "password": encrypted_password,
             "email": email,
-            "client_secret": encrypted_client_secret,  # Store encrypted client secret
+            "client_secret": encrypted_client_secret,  
             "status": "active",
             "created_at": datetime.now().isoformat(),
             "last_login": None,
             "login_count": 0
         }
-        
-        # Save users
-        if not save_users(users):
-            return None, "Failed to save user"
+        users_col.insert_one(user_doc)
         
         # Set up user folders
-        from utils.file_helpers import setup_user_folders
+        from utils.file_helpers import setup_user_collections
         try:
-            setup_user_folders(email)
+            setup_user_collections(email)
         except Exception as e:
-            print(f"Warning: Failed to setup user folders: {e}")
-            # Don't fail registration if folder setup fails
-        
+            print(f"Warning: Failed to setup user collections: {e}")
+            # Don't fail registration if collection setup fails
+
         # Send welcome email (but not for admin accounts during company creation)
         if not email.startswith('admin@'):
             try:
@@ -244,7 +236,7 @@ def register_user(username, email, password):
             "email": email,
             "client_secret": client_secret,  # Return plain client secret for initial setup
             "status": "active",
-            "created_at": users[email]["created_at"]
+            "created_at": user_doc["created_at"]
         }, None
         
     except Exception as e:

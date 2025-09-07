@@ -1,6 +1,6 @@
 from datetime import datetime,timedelta
 from utils.encryption import Encryption
-from utils.file_helpers import read_mail_file, save_mail_file,setup_user_folders
+from utils.file_helpers import read_mail_collection, save_mail_collection, setup_user_collections
 from utils.storage import is_storage_full
 from models.user import load_users
 import os
@@ -41,7 +41,7 @@ class MailService:
         if email not in users:
             return None, "User not found"
             
-        inbox = read_mail_file(email, 'inbox')
+        inbox = read_mail_collection(email, 'inbox')
         return MailService.decrypt_emails(inbox), None
     
     @staticmethod
@@ -51,7 +51,7 @@ class MailService:
         if email not in users:
             return None, "User not found"
             
-        sent = read_mail_file(email, 'sent')
+        sent = read_mail_collection(email, 'sent')
         return MailService.decrypt_emails(sent), None
     
     @staticmethod
@@ -61,7 +61,7 @@ class MailService:
         if email not in users:
             return None, "User not found"
             
-        drafts = read_mail_file(email, 'drafts')
+        drafts = read_mail_collection(email, 'drafts')
         return MailService.decrypt_emails(drafts), None
     
     @staticmethod
@@ -71,7 +71,7 @@ class MailService:
         if email not in users:
             return None, "User not found"
             
-        scheduled = read_mail_file(email, 'scheduled')
+        scheduled = read_mail_collection(email, 'scheduled')
         return MailService.decrypt_emails(scheduled), None
     
     @staticmethod
@@ -85,7 +85,7 @@ class MailService:
         
         try:
             # Check inbox for deleted emails
-            inbox = read_mail_file(email, 'inbox')
+            inbox = read_mail_collection(email, 'inbox')
             for mail in inbox:
                 if mail.get('message_status') == 'deleted':
                     mail_copy = mail.copy()
@@ -93,7 +93,7 @@ class MailService:
                     deleted_emails.append(mail_copy)
             
             # Check sent folder for deleted emails
-            sent = read_mail_file(email, 'sent')
+            sent = read_mail_collection(email, 'sent')
             for mail in sent:
                 if mail.get('message_status') == 'deleted':
                     mail_copy = mail.copy()
@@ -101,7 +101,7 @@ class MailService:
                     deleted_emails.append(mail_copy)
             
             # Check scheduled for deleted emails
-            scheduled = read_mail_file(email, 'scheduled')
+            scheduled = read_mail_collection(email, 'scheduled')
             for mail in scheduled:
                 if mail.get('message_status') == 'deleted':
                     mail_copy = mail.copy()
@@ -118,9 +118,9 @@ class MailService:
         """Send mail with improved attachment handling for both frontend and API"""
         try:
             # Setup folders for both sender and recipient
-            setup_user_folders(sender)
-            setup_user_folders(recipient)
-            
+            setup_user_collections(sender)
+            setup_user_collections(recipient)
+
             # Encrypt body - FIXED: This was missing in the original new version
             encryption = Encryption()
             encrypted_body = encryption.encrypt(body or "")
@@ -143,15 +143,15 @@ class MailService:
                     email_data["attachment"] = processed_attachment
             
             # Add to sender's sent folder
-            sent_emails = read_mail_file(sender, 'sent')
+            sent_emails = read_mail_collection(sender, 'sent')
             sent_emails.append(email_data.copy())
-            save_mail_file(sender, 'sent', sent_emails)
-            
+            save_mail_collection(sender, 'sent', sent_emails)
+
             # Add to recipient's inbox
-            inbox_emails = read_mail_file(recipient, 'inbox')
+            inbox_emails = read_mail_collection(recipient, 'inbox')
             inbox_emails.append(email_data.copy())
-            save_mail_file(recipient, 'inbox', inbox_emails)
-            
+            save_mail_collection(recipient, 'inbox', inbox_emails)
+
             return True, None
             
         except Exception as e:
@@ -283,9 +283,9 @@ class MailService:
             }
             
             # Add to sender's scheduled folder
-            scheduled = read_mail_file(sender, 'scheduled')
+            scheduled = read_mail_collection(sender, 'scheduled')
             scheduled.append(mail)
-            if not save_mail_file(sender, 'scheduled', scheduled):
+            if not save_mail_collection(sender, 'scheduled', scheduled):
                 return False, "Failed to schedule email"
             
             return True, None
@@ -316,9 +316,9 @@ class MailService:
             }
             
             # Add to drafts folder
-            drafts = read_mail_file(sender, 'drafts')
+            drafts = read_mail_collection(sender, 'drafts')
             drafts.append(draft)
-            if not save_mail_file(sender, 'drafts', drafts):
+            if not save_mail_collection(sender, 'drafts', drafts):
                 return False, "Failed to save draft"
             
             return True, None
@@ -331,7 +331,7 @@ class MailService:
     def delete_mail(email, mail_data, folder):
         """Mark an email as deleted"""
         try:
-            mails = read_mail_file(email, folder)
+            mails = read_mail_collection(email, folder)
             found = False
             
             for mail in mails:
@@ -346,8 +346,8 @@ class MailService:
             
             if not found:
                 return False, "Mail not found"
-            
-            if save_mail_file(email, folder, mails):
+
+            if save_mail_collection(email, folder, mails):
                 return True, None
             else:
                 return False, "Failed to save changes"
@@ -360,7 +360,7 @@ class MailService:
     def mark_read(email, mail_data, folder):
         """Mark an email as read"""
         try:
-            mails = read_mail_file(email, folder)
+            mails = read_mail_collection(email, folder)
             found = False
             
             for mail in mails:
@@ -375,8 +375,8 @@ class MailService:
             
             if not found:
                 return False, "Mail not found"
-            
-            if save_mail_file(email, folder, mails):
+
+            if save_mail_collection(email, folder, mails):
                 return True, None
             else:
                 return False, "Failed to save changes"
@@ -389,7 +389,7 @@ class MailService:
     def mark_unread(email, mail_data, folder):
         """Mark an email as unread"""
         try:
-            mails = read_mail_file(email, folder)
+            mails = read_mail_collection(email, folder)
             found = False
             
             for mail in mails:
@@ -404,8 +404,8 @@ class MailService:
             
             if not found:
                 return False, "Mail not found"
-            
-            if save_mail_file(email, folder, mails):
+
+            if save_mail_collection(email, folder, mails):
                 return True, None
             else:
                 return False, "Failed to save changes"
@@ -418,8 +418,8 @@ class MailService:
     def permanent_delete(email, mail_data, original_folder):
         """Permanently delete an email"""
         try:
-            mails = read_mail_file(email, original_folder)
-            
+            mails = read_mail_collection(email, original_folder)
+
             updated_mails = [
                 mail for mail in mails
                 if not (
@@ -432,8 +432,8 @@ class MailService:
             
             if len(mails) == len(updated_mails):
                 return False, "Mail not found"
-            
-            if save_mail_file(email, original_folder, updated_mails):
+
+            if save_mail_collection(email, original_folder, updated_mails):
                 return True, None
             else:
                 return False, "Failed to save changes"
@@ -446,7 +446,7 @@ class MailService:
     def restore_email(email, mail_data, original_folder):
         """Restore a deleted email"""
         try:
-            mails = read_mail_file(email, original_folder)
+            mails = read_mail_collection(email, original_folder)
             found = False
             
             for mail in mails:
@@ -461,8 +461,8 @@ class MailService:
             
             if not found:
                 return False, "Mail not found"
-            
-            if save_mail_file(email, original_folder, mails):
+
+            if save_mail_collection(email, original_folder, mails):
                 return True, None
             else:
                 return False, "Failed to save changes"
@@ -494,8 +494,8 @@ class MailService:
                         results.append(mail)
                 
                 return results, None
-            
-            mails = read_mail_file(email, folder)
+
+            mails = read_mail_collection(email, folder)
             encryption = Encryption()
             results = []
             
@@ -528,8 +528,8 @@ class MailService:
         try:
             if not emails_list:
                 return 0, "No emails provided"
-            
-            mails = read_mail_file(email, folder)
+
+            mails = read_mail_collection(email, folder)
             updated_count = 0
             
             for mail in mails:
@@ -550,7 +550,7 @@ class MailService:
                         break
             
             if updated_count > 0:
-                if save_mail_file(email, folder, mails):
+                if save_mail_collection(email, folder, mails):
                     return updated_count, None
                 else:
                     return 0, "Failed to save changes"
@@ -581,18 +581,18 @@ class MailService:
             }
             
             # Count inbox emails
-            inbox = read_mail_file(email, 'inbox')
+            inbox = read_mail_collection(email, 'inbox')
             stats["total_received"] = len([m for m in inbox if m.get('message_status') != 'deleted'])
             stats["unread_count"] = len([m for m in inbox if m.get('message_status') == 'unread'])
             stats["deleted_count"] += len([m for m in inbox if m.get('message_status') == 'deleted'])
             
             # Count sent emails
-            sent = read_mail_file(email, 'sent')
+            sent = read_mail_collection(email, 'sent')
             stats["total_sent"] = len([m for m in sent if m.get('message_status') != 'deleted'])
             stats["deleted_count"] += len([m for m in sent if m.get('message_status') == 'deleted'])
             
             # Count drafts
-            drafts = read_mail_file(email, 'drafts')
+            drafts = read_mail_collection(email, 'drafts')
             stats["draft_count"] = len(drafts)
             
             return stats, None

@@ -1,64 +1,60 @@
 # app.py - Enhanced with security and performance improvements
 import os
 import sys
-from flask import Flask, send_from_directory, jsonify, request
+from time import time
+from flask import Flask, send_from_directory, jsonify, request, render_template
 from flask_cors import CORS
-from config import MAIL_ROOT, DATA_DIR, UPLOAD_FOLDER, SESSIONS_FILE, API_KEY, SUPPORTED_SERVICES
-from datetime import datetime
-import time
+from config import MAIL_ROOT, UPLOAD_FOLDER, API_KEY, SUPPORTED_SERVICES, db
+from datetime import datetime, timedelta, timezone
+from utils.encryption import Encryption
+from pymongo import MongoClient, errors
+from pathlib import Path
+import psutil
+
+
+datetime.now(timezone.utc)
 
 # Global variables for monitoring
-app_start_time = time.time()
+app_start_time = time()
 request_count = 0
 
 def verify_dependencies():
     """Verify all required dependencies and configurations"""
     issues = []
-    
+
     # Check Python version
     if sys.version_info < (3, 7):
         issues.append("Python 3.7 or higher is required")
-    
-    # Check for required directories
-    required_dirs = [MAIL_ROOT, DATA_DIR, UPLOAD_FOLDER]
-    for dir_path in required_dirs:
-        if not os.path.exists(dir_path):
-            try:
-                os.makedirs(dir_path, exist_ok=True)
-                print(f"✓ Created directory: {dir_path}")
-            except Exception as e:
-                issues.append(f"Cannot create directory {dir_path}: {e}")
-    
-    # Check for required Python packages with correct import names
+    # Check for required Python packages
     required_packages = {
         'flask': 'flask',
         'flask_cors': 'flask-cors', 
         'cryptography': 'cryptography',
-        'jwt': 'PyJWT'  # PyJWT package imports as 'jwt'
+        'jwt': 'PyJWT',  # PyJWT package imports as 'jwt'
+        'pymongo': 'pymongo'
     }
-    
+
     for import_name, package_name in required_packages.items():
         try:
             __import__(import_name)
         except ImportError:
             issues.append(f"Missing package: {package_name} (install with: pip install {package_name})")
-    
+
     # Check configuration
     if not API_KEY or len(API_KEY) < 32:
         issues.append("API_KEY not configured or too short")
-    
+
     if not SUPPORTED_SERVICES:
         issues.append("No supported services configured")
-    
-    # Check file permissions
+
+    # Check MongoDB connection
     try:
-        test_file = DATA_DIR / "test_permissions.tmp"
-        with open(test_file, 'w') as f:
-            f.write("test")
-        os.remove(test_file)
-    except Exception as e:
-        issues.append(f"File permission issues in {DATA_DIR}: {e}")
-    
+        client = MongoClient(os.environ.get('MONGO_URI', 'mongodb://localhost:27017'), serverSelectionTimeoutMS=3000)
+        client.admin.command('ping')  # Test connection
+        print("✅ MongoDB connection verified")
+    except errors.ConnectionFailure as e:
+        issues.append(f"Cannot connect to MongoDB: {e}")
+
     if issues:
         print("⚠️  Startup Issues Found:")
         for issue in issues:
@@ -67,6 +63,7 @@ def verify_dependencies():
     else:
         print("✅ All dependencies verified")
         return True
+
 
 def register_blueprints_with_detailed_logging(app):
     """Register blueprints with detailed error handling and logging"""
@@ -243,6 +240,139 @@ def setup_request_logging(app):
 # Create and configure the app
 app = Flask(__name__, static_folder=os.path.abspath('../frontend/build'), static_url_path='')
 
+# Reference your logs collection
+logs_col = db["logs"]
+
+@app.route('/dashboard')
+def dashboard():
+    return render_template("dashboard.html")
+
+from datetime import datetime, timedelta
+from flask import jsonify
+
+@app.route('/dashboard/data', methods=['GET'])
+def get_dashboard_data():
+    try:
+        logs_col = db['logs']
+
+        # Total requests
+        total_requests = logs_col.count_documents({})
+
+        # Active IPs in last 1 hour
+        one_hour_ago = datetime.now() - timedelta(hours=1)
+        active_ips = logs_col.distinct("ip", {"timestamp": {"$gte": one_hour_ago}})
+
+        # Endpoint distribution
+        pipeline = [
+            {"$group": {"_id": "$path", "count": {"$sum": 1}}},
+            {"$sort": {"count": -1}}
+        ]
+        endpoint_stats = list(logs_col.aggregate(pipeline))
+
+        # Average response time
+        avg_response = logs_col.aggregate([
+            {"$group": {"_id": None, "avgResponseTime": {"$avg": "$response_time"}}}
+        ])
+        avg_response_time = next(avg_response, {}).get("avgResponseTime", 0)
+        avg_response_time = round(avg_response_time, 2)
+
+        # Error rate (proportion of 4xx/5xx)
+        error_count = logs_col.count_documents({"status": {"$gte": 400}})
+        error_rate = round((error_count / total_requests * 100) if total_requests else 0, 2)
+
+        # Recent logs (limit 10)
+        recent_logs_cursor = logs_col.find().sort("timestamp", -1).limit(10)
+        recent_logs = []
+        for log in recent_logs_cursor:
+            recent_logs.append({
+                "timestamp": log.get("timestamp").isoformat() if isinstance(log.get("timestamp"), datetime) else str(log.get("timestamp")),
+                "ip": log.get("ip"),
+                "method": log.get("method"),
+                "path": log.get("path"),
+                "user_agent": log.get("user_agent"),
+                "status": log.get("status"),
+                "response_time": log.get("response_time")
+            })
+
+        # Requests per hour (last 24 hours)
+        now = datetime.now()
+        last_24h = now - timedelta(hours=24)
+        traffic_labels = [(now - timedelta(hours=i)).strftime("%I:%M %p") for i in range(23, -1, -1)]
+        traffic_counts = []
+
+        for i in range(23, -1, -1):
+            hour_start = (now - timedelta(hours=i)).replace(minute=0, second=0, microsecond=0)
+            hour_end = hour_start + timedelta(hours=1)
+            count = logs_col.count_documents({
+                "timestamp": {"$gte": hour_start, "$lt": hour_end}
+            })
+            traffic_counts.append(count)
+
+        # Status code distribution
+        pipeline_status = [
+            {"$match": {"status": {"$ne": None}}},
+            {"$group": {"_id": "$status", "count": {"$sum": 1}}},
+             {"$sort": {"_id": 1}}
+        ]
+        status_data = list(logs_col.aggregate(pipeline_status))
+        status_labels = [str(item["_id"]) for item in status_data]
+        status_counts = [item["count"] for item in status_data]
+
+        return jsonify({
+            "total_requests": total_requests,
+            "active_users": len(active_ips),
+            "avg_response_time": avg_response_time,
+            "error_rate": error_rate,
+            "endpoint_stats": endpoint_stats,
+            "recent_logs": recent_logs,
+            "traffic_labels": traffic_labels,
+            "traffic_counts": traffic_counts,
+            "status_labels": status_labels,
+            "status_counts": status_counts
+        })
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.before_request
+def start_timer():
+    request.start_time = time()
+
+@app.after_request
+def log_request(response):
+    duration = int((time() - request.start_time) * 1000)  # in ms
+    log_entry = {
+        "ip": request.remote_addr,
+        "method": request.method,
+        "path": request.path,
+        "timestamp": datetime.now(timezone.utc),  # timezone-aware
+        "user_agent": request.headers.get("User-Agent"),
+        "query_params": request.args.to_dict(),
+        "body": request.get_json(silent=True),
+        "status": response.status_code,        # ✅ always store status
+        "response_time": duration              # ✅ store response time
+    }
+    logs_col.insert_one(log_entry)
+    return response
+
+
+@app.before_request
+def log_request():
+    try:
+        log_entry = {
+            "ip": request.remote_addr,
+            "method": request.method,
+            "path": request.path,
+            "timestamp": datetime.utcnow(),
+            "user_agent": request.headers.get("User-Agent"),
+            "query_params": request.args.to_dict(),
+            "body": request.get_json(silent=True)  # avoid errors if no JSON
+        }
+        logs_col.insert_one(log_entry)
+    except Exception as e:
+        print(f"❌ Failed to log request: {e}")
+
 # Configure CORS with more restrictive settings for production
 if os.environ.get('FLASK_ENV') == 'production':
     # Production CORS settings
@@ -258,46 +388,48 @@ else:
 setup_security_headers(app)
 setup_request_logging(app)
 
-# Initialize application
 def init_app():
     """Initialize the application"""
     print("🚀 Initializing Mail-as-a-Service Backend...")
-    
+
     # Verify dependencies first
     if not verify_dependencies():
         print("❌ Application startup failed due to missing dependencies")
         return False
-    
+
     # Create necessary directories with proper permissions
-    directories = [MAIL_ROOT, DATA_DIR, UPLOAD_FOLDER]
+    directories = [MAIL_ROOT, UPLOAD_FOLDER]
     for directory in directories:
         try:
             os.makedirs(directory, exist_ok=True)
-            # Set proper permissions (readable/writable by owner only)
-            os.chmod(directory, 0o755)
+            os.chmod(directory, 0o755)  # Readable/writable by owner
         except Exception as e:
             print(f"❌ Failed to create/setup directory {directory}: {e}")
             return False
-    
-    # Initialize sessions file if it doesn't exist
+
+    # Initialize MongoDB connection
     try:
-        if not os.path.exists(SESSIONS_FILE):
-            SESSIONS_FILE.parent.mkdir(parents=True, exist_ok=True)
-            with open(SESSIONS_FILE, 'w') as f:
-                f.write("[]")
-            os.chmod(SESSIONS_FILE, 0o600)  # Readable/writable by owner only
-    except Exception as e:
-        print(f"❌ Failed to initialize sessions file: {e}")
+        mongo_client = MongoClient(os.environ.get('MONGO_URI', 'mongodb://localhost:27017/'))
+        db = mongo_client.get_database(os.environ.get('MONGO_DB', 'mail_service'))
+        # Ensure sessions collection exists
+        if 'sessions' not in db.list_collection_names():
+            db.create_collection('sessions')
+        print("✅ MongoDB connected and 'sessions' collection verified")
+    except errors.ConnectionFailure as e:
+        print(f"❌ MongoDB connection failed: {e}")
         return False
-    
+    except Exception as e:
+        print(f"❌ Failed to initialize MongoDB: {e}")
+        return False
+
     # Initialize encryption key
     try:
-        from utils.encryption import Encryption
         Encryption()  # This will create the key file if it doesn't exist
+        print("✅ Encryption initialized")
     except Exception as e:
         print(f"❌ Failed to initialize encryption: {e}")
         return False
-    
+
     print("✅ Application initialized successfully")
     return True
 
@@ -360,53 +492,60 @@ def serve_static(path):
             'message': str(e)
         }), 500
 
-# Health check endpoint for monitoring
+
 @app.route('/health')
 def health_check():
     """Comprehensive health check"""
     try:
-        from pathlib import Path
-        from datetime import datetime
-        
         # Check critical components
         checks = {
             'service': 'running',
             'uptime_seconds': round(time.time() - app_start_time, 2),
             'request_count': request_count,
-            'database': 'connected' if Path(DATA_DIR / "users.json").exists() else 'disconnected',
             'storage': 'available' if Path(MAIL_ROOT).exists() else 'unavailable',
             'encryption': 'enabled' if Path("secret.key").exists() else 'disabled',
             'config': 'loaded' if API_KEY else 'missing',
             'supported_services': len(SUPPORTED_SERVICES),
             'timestamp': datetime.now().isoformat()
         }
-        
-        # Check memory usage (basic)
+
+        # MongoDB health check
         try:
-            import psutil
+            mongo_client = MongoClient(os.environ.get('MONGO_URI', 'mongodb://localhost:27017/'), serverSelectionTimeoutMS=2000)
+            db = mongo_client.get_database(os.environ.get('MONGO_DB', 'mail_service'))
+            # Simple ping to check connectivity
+            db.command("ping")
+            checks['database'] = 'connected'
+        except errors.ServerSelectionTimeoutError:
+            checks['database'] = 'disconnected'
+        except Exception as e:
+            checks['database'] = f'error: {str(e)}'
+
+        # Check memory and CPU usage
+        try:
             process = psutil.Process()
             checks['memory_mb'] = round(process.memory_info().rss / 1024 / 1024, 2)
             checks['cpu_percent'] = round(process.cpu_percent(), 2)
         except ImportError:
             checks['memory_mb'] = 'unavailable'
             checks['cpu_percent'] = 'unavailable'
-        
+
         # Determine overall health
         critical_checks = ['service', 'database', 'storage', 'config']
         all_healthy = all(
             checks.get(check) in ['running', 'connected', 'available', 'loaded', 'enabled'] 
             for check in critical_checks
         )
-        
+
         status_code = 200 if all_healthy and checks['uptime_seconds'] > 1 else 503
-        
+
         return jsonify({
             'status': 'healthy' if all_healthy else 'unhealthy',
             'checks': checks,
             'version': '1.0.0',
             'service': 'Mail-as-a-Service'
         }), status_code
-        
+
     except Exception as e:
         return jsonify({
             'status': 'unhealthy',
@@ -509,8 +648,8 @@ if __name__ == '__main__':
     print("\n🚀 Starting Mail-as-a-Service Backend...")
     print(f"📧 Supported domains: {len(SUPPORTED_SERVICES)}")
     print(f"🔐 API configured: {'Yes' if API_KEY else 'No'}")
-    print(f"💾 Data directory: {DATA_DIR}")
-    print(f"📁 Mail storage: {MAIL_ROOT}")
+    print(f"📁 Mail storage directory: {MAIL_ROOT}")
+    print(f"🗄️  MongoDB URI: {os.environ.get('MONGO_URI', 'mongodb://localhost:27017/')}")
     print(f"🔒 Security headers: Enabled")
     print(f"📝 Request logging: Enabled")
     

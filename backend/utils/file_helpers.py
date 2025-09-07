@@ -1,44 +1,59 @@
-import os
-import json
-from config import MAIL_ROOT
+from pymongo import MongoClient
+from config import MONGO_URI, DB_NAME
 
-def setup_user_folders(email):
-    """Create user folders and default JSON files"""
-    user_folder = os.path.join(MAIL_ROOT, email)
-    folders = ['inbox.json', 'sent.json', 'drafts.json', 'templates.json', 'scheduled.json']
-    
-    os.makedirs(user_folder, exist_ok=True)
-    
-    for folder in folders:
-        folder_path = os.path.join(user_folder, folder)
-        if not os.path.exists(folder_path):
-            with open(folder_path, 'w') as f:
-                json.dump([], f)
+# Connect to MongoDB
+client = MongoClient(MONGO_URI)
+db = client[DB_NAME]
+
+# Email collections
+EMAIL_COLLECTIONS = ["inbox", "sent", "drafts", "templates", "scheduled"]
+
+def setup_user_collections(email):
+    """
+    MongoDB doesn't need folders per user.
+    This function ensures user exists in the database if needed.
+    """
+    from models.user import get_user_by_email
+    user = get_user_by_email(email)
+    if not user:
+        raise ValueError(f"User {email} does not exist")
+    # No collections creation needed; MongoDB creates collections dynamically
+    return True
 
 def setup_user_inbox(email):
     """Backward compatibility function"""
-    setup_user_folders(email)
+    return setup_user_collections(email)
 
-def read_mail_file(email, file_type):
-    """Read a mail file from the user's folder"""
-    file_path = os.path.join(MAIL_ROOT, email, f'{file_type}.json')
-    
-    if not os.path.exists(file_path):
-        return []
-    
+def read_mail_collection(email, collection_name):
+    """Read all emails for a user from a specific MongoDB collection"""
+    if collection_name not in EMAIL_COLLECTIONS:
+        raise ValueError(f"Invalid collection name: {collection_name}")
+    col = db[collection_name]
     try:
-        with open(file_path, 'r') as f:
-            return json.load(f)
-    except Exception:
+        emails = list(col.find({"owner": email}, {"_id": 0}))
+        return emails
+    except Exception as e:
+        print(f"Error reading {collection_name} for {email}: {e}")
         return []
 
-def save_mail_file(email, file_type, data):
-    """Save data to a mail file in the user's folder"""
-    file_path = os.path.join(MAIL_ROOT, email, f'{file_type}.json')
+def save_mail_collection(email, collection_name, data):
+    """
+    Save data to a MongoDB email collection for a user.
+    Overwrites all previous emails in that collection for the user.
+    """
+    if collection_name not in EMAIL_COLLECTIONS:
+        raise ValueError(f"Invalid collection name: {collection_name}")
     
+    col = db[collection_name]
     try:
-        with open(file_path, 'w') as f:
-            json.dump(data, f, indent=2)
+        # Remove existing emails for this user in this collection
+        col.delete_many({"owner": email})
+        if data:
+            # Ensure each email has 'owner' field
+            for email_doc in data:
+                email_doc["owner"] = email
+            col.insert_many(data)
         return True
-    except Exception:
+    except Exception as e:
+        print(f"Error saving {collection_name} for {email}: {e}")
         return False

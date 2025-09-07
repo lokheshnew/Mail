@@ -7,8 +7,13 @@ from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from cryptography.hazmat.backends import default_backend
-from config import KEY_FILE
 import secrets
+from pymongo import MongoClient
+
+
+MONGO_URI = os.environ.get('MONGO_URI', 'mongodb://localhost:27017/')
+DB_NAME = os.environ.get('MONGO_DB', 'mail_service')
+COLLECTION_NAME = 'encryption_keys'
 
 class EnhancedEncryption:
     """
@@ -28,17 +33,29 @@ class EnhancedEncryption:
     
     def _initialize(self):
         """Initialize encryption with master key"""
-        # Generate master key if it doesn't exist
-        if not os.path.exists(KEY_FILE):
-            master_key = Fernet.generate_key()
-            with open(KEY_FILE, 'wb') as f:
-                f.write(master_key)
-        
-        # Load the master key
-        with open(KEY_FILE, 'rb') as f:
-            self._master_key = f.read()
-        
-        self._fernet_cipher = Fernet(self._master_key)
+        try:
+            client = MongoClient(MONGO_URI)
+            db = client[DB_NAME]
+            collection = db[COLLECTION_NAME]
+
+            # Attempt to retrieve existing master key
+            key_doc = collection.find_one({"_id": "master_key"})
+            if key_doc:
+                self._master_key = key_doc['key'].encode()
+            else:
+                # Generate new key and store in MongoDB
+                self._master_key = Fernet.generate_key()
+                collection.insert_one({"_id": "master_key", "key": self._master_key.decode()})
+
+            self._fernet_cipher = Fernet(self._master_key)
+            print("✅ Encryption initialized successfully")
+
+        except Exception as e:
+            print(f"❌ Failed to initialize encryption: {e}")
+            # Fallback: in-memory key (non-persistent)
+            self._master_key = Fernet.generate_key()
+            self._fernet_cipher = Fernet(self._master_key)
+            print("⚠️  Using in-memory encryption key (not persistent)")
     
     # ========== FERNET ENCRYPTION (Current Implementation) ==========
     def encrypt(self, data):
